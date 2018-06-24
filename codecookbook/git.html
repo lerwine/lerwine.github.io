@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Git Cheat Sheet</title>
+        <!-- <meta name="description" content=""> -->
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- <link rel="stylesheet" href=""> -->
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <h1>Git Cheat Sheet</h1>
+        <h2>Credential Management</h2>
+        <h3>Set credential helper</h3>
+        The following will configure git to use the windows credential helper:
+        <code>git config --global credential.helper wincred</code>
+        <h3>Set default email address</h3>
+        Using your personal private email address that is associated with the github account:
+        <code>git config --global user.email <em>email@address</em></code>
+        Using github-provided no-reply email address that is associated with the github account:
+        <code>git config --global user.email <em>userid</em>+<em>loginName</em>@users.noreply.github.com</code>
+        <h3>Set default user name</h3>
+        This sets the default user name for all repositories where the user name is not configured (this is not the github username. Use user.email to associate with a
+        specific account):
+        <code>git config --global user.name <em>user name</em></code>
+        <h2>Managing Repositories</h2>
+        <h3>Push existing repository</h3>
+        First, create a new, totally empty remote github repository.
+        <code>git remote add origin <em>url_to_remote_repo</em>
+            git push -u origin master</code>
+        <h3>Clone/check out remote repository</h3>
+        <code>cd <em>parentDirectory</em></code>
+        git clone --recurse-submodules <em>url</em> <em>directoryName</em>
+        <h2>Common Local Git Repository Synchronization Issues</h2>
+        <h3>No upstream branch</h3>
+        Many times, when a new local clone of a remote repository is created, sync and push commands will fail, saying there is no upstream branch.
+        This can be fixed with the following command, replacing "remoteName" with the name of the remote repository and "remoteBranch" with the name of the remote branch
+        (which is typically the name of the current branch):
+        <code>git branch --set-upstream-to <em>remoteName</em>/<em>remoteBranch</em></code>
+        So, if your remote repository name is "origin", and your current branch is "master", then the actual command would be:
+        <code>git branch --set-upstream-to origin/master</code>
+        <h3>Getting the name of the remote repository</h3>
+        If you aren't sure what the name of the remote repository is, simply use the following command:
+        <code>git remote</code>
+        <h3>Getting branch names</h3>
+        Typically, you would be able to see the name of the  current branch in the lower-left corner of the Visual Studio Code editor window. Alternatively, you can see what the name of the currently checked out branch is by using the following command:
+        <code>git branch</code>
+        You don't have to have a branch checked out in order to configure the upstream branch. To see a list of all the branch names use:
+        <code>git branch -a</code>
+        <h2>Managing Branches</h2>
+        <h3>Deleting a branch</h3>
+        If you wish to delete a branch, you can use the following command:
+        <code>git branch -D name_of_branch</code>
+    </body>
+</html>
