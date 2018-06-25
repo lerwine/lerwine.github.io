@@ -9,66 +9,135 @@
         <title>Git Cheat Sheet</title>
         <!-- <meta name="description" content=""> -->
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <!-- <link rel="stylesheet" href=""> -->
+        <link rel="stylesheet" type="text/css" media="screen" href="../lib/bootstrap/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../lib/bootstrap/css/bootstrap-reboot.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../style/default.css" />
+        <!-- <script type="text/javascript" src="../lib/jquery/jquery.js"></script> -->
+        <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.js"></script>
     </head>
     <body>
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-        <header class="container-fluid border border-secondary p-sm-1"><h1>Git Cheat Sheet</h1></header>
+        <header class="container-fluid border border-secondary p-sm-1 defaultHeader">
+            <h1>Coding Cookbook</h1>
+            <h2 class="myThing">Git Cheat Sheet</h2>
+        </header>
         <nav class="container-fluid navbar navbar-expand-lg navbar-light bg-light border border-light p-sm-1 mr-md-3">
-            <ul class="navbar-nav mr-auto">
+            <ul class="navbar-nav mr-auto nav-tabs">
                 <li class="nav-item border border-secondary bg-dark"><a href="../index.html" class="nav-link text-light">Home</a></li>
-                <li class="nav-item border border-secondary bg-dark"><a href="index.html" class="nav-link text-light">Coding Cookbook</a>
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item border border-secondary bg-dark"><a href="vscode.html" class="nav-link active text-light">VS Code</a></li>
-                        <li class="nav-item active border border-secondary bg-dark"><a href="git.html" class="nav-link active text-light">Git</a></li>
-                    </ul>
-                </li>
+                <li class="nav-item active border border-secondary bg-dark"><a href="index.html" class="nav-link active text">Coding Cookbook</a></li>
             </ul>
         </nav>
+        <aside class="float-sm-right border border-secondary p-sm-1 ml-md-3">
+            <ul class="nav flex-column">
+                <li class="nav-item border border-secondary bg-dark"><a href="index.html" class="nav-link text-light">Home</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="vscode.html" class="nav-link text-light">VS Code</a></li>
+                <li class="nav-item active border border-secondary bg-light"><a href="git.html" class="nav-link active text-dark">Git</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="npmrepo.html" class="nav-link text-light">Repo w/ NPM</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="angularweb.html" class="nav-link text-light">Angular Website</a></li>
+            </ul>
+        </aside>
         <section class="container-fluid border border-light p-md-3">
-            <h2>Credential Management</h2>
-            <h3>Set credential helper</h3>
-            The following will configure git to use the windows credential helper:
-            <code>git config --global credential.helper wincred</code>
-            <h3>Set default email address</h3>
-            Using your personal private email address that is associated with the github account:
-            <code>git config --global user.email <em>email@address</em></code>
-            Using github-provided no-reply email address that is associated with the github account:
-            <code>git config --global user.email <em>userid</em>+<em>loginName</em>@users.noreply.github.com</code>
-            <h3>Set default user name</h3>
-            This sets the default user name for all repositories where the user name is not configured (this is not the github username. Use user.email to associate with a
-            specific account):
-            <code>git config --global user.name <em>user name</em></code>
-            <h2>Managing Repositories</h2>
-            <h3>Push existing repository</h3>
-            First, create a new, totally empty remote github repository.
-            <code>git remote add origin <em>url_to_remote_repo</em>
-                git push -u origin master</code>
-            <h3>Clone/check out remote repository</h3>
-            <code>cd <em>parentDirectory</em></code>
-            git clone --recurse-submodules <em>url</em> <em>directoryName</em>
-            <h2>Common Local Git Repository Synchronization Issues</h2>
-            <h3>No upstream branch</h3>
-            Many times, when a new local clone of a remote repository is created, sync and push commands will fail, saying there is no upstream branch.
-            This can be fixed with the following command, replacing "remoteName" with the name of the remote repository and "remoteBranch" with the name of the remote branch
-            (which is typically the name of the current branch):
-            <code>git branch --set-upstream-to <em>remoteName</em>/<em>remoteBranch</em></code>
-            So, if your remote repository name is "origin", and your current branch is "master", then the actual command would be:
-            <code>git branch --set-upstream-to origin/master</code>
-            <h3>Getting the name of the remote repository</h3>
-            If you aren't sure what the name of the remote repository is, simply use the following command:
-            <code>git remote</code>
-            <h3>Getting branch names</h3>
-            Typically, you would be able to see the name of the  current branch in the lower-left corner of the Visual Studio Code editor window. Alternatively, you can see what the name of the currently checked out branch is by using the following command:
-            <code>git branch</code>
-            You don't have to have a branch checked out in order to configure the upstream branch. To see a list of all the branch names use:
-            <code>git branch -a</code>
-            <h2>Managing Branches</h2>
-            <h3>Deleting a branch</h3>
-            If you wish to delete a branch, you can use the following command:
-            <code>git branch -D name_of_branch</code>
+            <div class="card">
+                <div class="card-header"><h3 id="CredentialManagement">Credential Management</h3></div>
+                <div class="card-body">
+                    <div class="card">
+                        <div class="card-header"><h4 id="CredentialHelper">Set credential helper</h4></div>
+                        <div class="card-body">
+                            The following will configure git to use the windows credential helper:
+                            <pre class="console-pane pre-scrollable"><code>git config --global credential.helper wincred</code></pre>
+                        </div>
+                    </div>
+                    <div class="card-deck">
+                        <div class="card">
+                            <div class="card-header"><h4>Set default email address</h4></div>
+                            <div class="card-body">
+                                Using your personal private email address that is associated with the github account:
+                                <pre class="console-pane pre-scrollable"><code>git config --global user.email <kbd>email@address</kbd></code></pre>
+                                Using github-provided no-reply email address that is associated with the github account:
+                                <pre class="console-pane pre-scrollable"><code>git config --global user.email <kbd>userid</kbd>+<kbd>loginName</kbd>@users.noreply.github.com</code></pre>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h4>Set default user name</h4></div>
+                            <div class="card-body">
+                                This sets the default user name for all repositories where the user name is not configured (this is not the github username. Use user.email to associate with a
+                                specific account):
+                                <pre class="console-pane pre-scrollable"><code>git config --global user.name <kbd>user name</kbd></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Managing Repositories</h3></div>
+                <div class="card-body">
+                    <div class="card-deck">
+                        <div class="card">
+                            <div class="card-header"><h4>Push existing repository</h4></div>
+                            <div class="card-body">
+                                First, create a new, totally empty remote github repository.
+                                <pre class="console-pane pre-scrollable"><code>git remote add origin <kbd>url_to_remote_repo</kbd>
+git push -u origin master</code></pre>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h4>Clone/check out remote repository</h4></div>
+                            <div class="card-body">
+                                <pre class="console-pane pre-scrollable"><code>cd <kbd>parentDirectory</kbd>
+git clone --recurse-submodules <kbd>url</kbd> <kbd>directoryName</kbd></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Common Local Git Repository Synchronization Issues</h3></div>
+                <div class="card-body">
+                    <div class="card">
+                            <div class="card-header"><h4>No upstream branch</h4></div>
+                        <div class="card-body">
+                            Many times, when a new local clone of a remote repository is created, sync and push commands will fail, saying there is no upstream branch.
+                            This can be fixed with the following command, replacing "remoteName" with the name of the remote repository and "remoteBranch" with the name of the remote branch
+                            (which is typically the name of the current branch):
+                            <pre class="console-pane pre-scrollable"><code>git branch --set-upstream-to <kbd>remoteName</kbd>/<kbd>remoteBranch</kbd></code></pre>
+                            So, if your remote repository name is "origin", and your current branch is "master", then the actual command would be:
+                            <pre class="console-pane pre-scrollable"><code>git branch --set-upstream-to origin/master</code></pre>
+                        </div>
+                    </div>
+                    <div class="card-deck">
+                        <div class="card">
+                            <div class="card-header"><h4>Getting the name of the remote repository</h4></div>
+                            <div class="card-body">
+                                If you aren't sure what the name of the remote repository is, simply use the following command:
+                                <pre class="console-pane pre-scrollable"><code>git remote</code></pre>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h4>Getting branch names</h4></div>
+                            <div class="card-body">
+                                Typically, you would be able to see the name of the  current branch in the lower-left corner of the Visual Studio Code editor window. Alternatively, you can see what the name of the currently checked out branch is by using the following command:
+                                <pre class="console-pane pre-scrollable"><code>git branch</code></pre>
+                                You don't have to have a branch checked out in order to configure the upstream branch. To see a list of all the branch names use:
+                                <pre class="console-pane pre-scrollable"><code>git branch -a</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Managing Branches</h3></div>
+                <div class="card-body">
+                    <div class="card">
+                        <div class="card-header"><h4>Deleting a branch</h4></div>
+                        <div class="card-body">
+                            If you wish to delete a branch, you can use the following command:
+                            <pre class="console-pane pre-scrollable"><code>git branch -D <kbd>name_of_branch</kbd></code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </body>
 </html>

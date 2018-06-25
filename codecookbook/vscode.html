@@ -9,51 +9,171 @@
         <title>VS Code Cheat Sheet</title>
         <!-- <meta name="description" content=""> -->
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        <!-- <link rel="stylesheet" href=""> -->
+        <link rel="stylesheet" type="text/css" media="screen" href="../lib/bootstrap/css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../lib/bootstrap/css/bootstrap-reboot.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="../style/default.css" />
+        <!-- <script type="text/javascript" src="../lib/jquery/jquery.js"></script> -->
+        <script type="text/javascript" src="../lib/bootstrap/js/bootstrap.js"></script>
     </head>
     <body>
         <!--[if lt IE 7]>
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-        <header class="container-fluid border border-secondary p-sm-1"><h1>VS Code Cheat Sheet</h1></header>
+        <header class="container-fluid border border-secondary p-sm-1 defaultHeader">
+            <h1>Coding Cookbook</h1>
+            <h2>VS Code Cheat Sheet</h2>
+        </header>
         <nav class="container-fluid navbar navbar-expand-lg navbar-light bg-light border border-light p-sm-1 mr-md-3">
-            <ul class="navbar-nav mr-auto">
+            <ul class="navbar-nav mr-auto nav-tabs">
                 <li class="nav-item border border-secondary bg-dark"><a href="../index.html" class="nav-link text-light">Home</a></li>
-                <li class="nav-item border border-secondary bg-dark"><a href="index.html" class="nav-link text-light">Coding Cookbook</a>
-                    <ul class="navbar-nav mr-auto">
-                        <li class="nav-item active border border-secondary bg-dark"><a href="vscode.html" class="nav-link active text-light">VS Code</a></li>
-                        <li class="nav-item border border-secondary bg-dark"><a href="git.html" class="nav-link active text-light">Git</a></li>
-                    </ul>
-                </li>
+                <li class="nav-item active border border-secondary bg-dark"><a href="index.html" class="nav-link active text">Coding Cookbook</a></li>
             </ul>
         </nav>
+        <aside class="float-sm-right border border-secondary p-sm-1 ml-md-3">
+            <ul class="nav flex-column">
+                <li class="nav-item border border-secondary bg-dark"><a href="index.html" class="nav-link text-light">Home</a></li>
+                <li class="nav-item active border border-secondary bg-light"><a href="vscode.html" class="nav-link active text-dark">VS Code</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="git.html" class="nav-link text-light">Git</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="npmrepo.html" class="nav-link text-light">Repo w/ NPM</a></li>
+                <li class="nav-item border border-secondary bg-dark"><a href="angularweb.html" class="nav-link text-light">Angular Website</a></li>
+            </ul>
+        </aside>
         <section class="container-fluid border border-light p-md-3">
-            <h1>My Typical Initial Setup</h1>
-            Before installing Visual Studio Code, I found that things go smoother if I install a few things, first:
-            <ol>
-                <li><h2>Git Client</h2>
+            <div class="card">
+                <div class="card-header"><h3>My Typical Initial Setup</h3></div>
+                <div class="card-body">
+                    Before installing Visual Studio Code, I found that things go smoother if I install a few things, first:
+                    <div class="card-columns">
+                        <div class="card">
+                            <div class="card-header"><h5>1. Git Client</h5></div>
+                            <div class="card-body">
+                                <ul>
+                                    <li>Go to <a href="https://git-scm.com/" target="_blank">https://git-scm.com/</a> to download the client that works well with Visual Studio Code.</li>
+                                    <li>Download GitHub Desktop from <a href="https://desktop.github.com/" target="_blank">https://desktop.github.com/</a>
+                                        to make it easier to create and manage repositories that are cloned locally from Git.</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h5>2. Microsoft SDKs</h5></div>
+                            <div class="card-body">
+                                Desired .NET Core and .NET Framework versions can be downloaded from
+                                <a href="https://www.microsoft.com/net/download/visual-studio-sdks" target="_blank">https://www.microsoft.com/net/download/visual-studio-sdks</a>.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h5>3. Node.js</h5></div>
+                            <div class="card-body">
+                                The installer for node.js can be obtained from <a href="https://nodejs.org" target="_blank">https://nodejs.org</a>.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h5>4. Visual Studio Code</h5></div>
+                            <div class="card-body">
+                                Installer can be downloaded from <a href="https://code.visualstudio.com/download" target="_blank">https://code.visualstudio.com/download</a>.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h5>5. Configure global git settings for credential helper and email address</h5></div>
+                            <div class="card-body">
+                                For Windows installations, it's probably best to use the Windows Credential Store to store your Git login credentials,
+                                so you don't have to enter your username and password every time you synchronize with the remote repository.
+                                <a href="git.html?#CredentialHelper">Click here for information about configuring the credential helper</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>Bulk Visual Studio Code Extension Installation</h3></div>
+                <div class="card-body">
+                    Following is an example PowerShell script that can be executed within the Visual Studio Code terminal to ensure that a list of extensions that
+                    have been installed:
+                    <pre class="script-pane  pre-scrollable"><code><var>$RecommendedExtensions</var> <span class="script-operator">=</span> @(
+    <q>'abusaidm.html-snippets'</q><span class="script-operator">,</span>
+    <q>'Angular.ng-template'</q><span class="script-operator">,</span>
+    <q>'christian-kohler.npm-intellisense'</q><span class="script-operator">,</span>
+    <q>'christian-kohler.path-intellisense'</q><span class="script-operator">,</span>
+    <q>'DavidAnson.vscode-markdownlint'</q><span class="script-operator">,</span>
+    <q>'dbaeumer.jshint'</q><span class="script-operator">,</span>
+    <q>'dbaeumer.vscode-eslint'</q><span class="script-operator">,</span>
+    <q>'DotJoshJohnson.xml'</q><span class="script-operator">,</span>
+    <q>'ecmel.vscode-html-css'</q><span class="script-operator">,</span>
+    <q>'EditorConfig.EditorConfig'</q><span class="script-operator">,</span>
+    <q>'eg2.tslint'</q><span class="script-operator">,</span>
+    <q>'eg2.vscode-npm-script'</q><span class="script-operator">,</span>
+    <q>'esbenp.prettier-vscode'</q><span class="script-operator">,</span>
+    <q>'fknop.vscode-npm'</q><span class="script-operator">,</span>
+    <q>'formulahendry.auto-close-tag'</q><span class="script-operator">,</span>
+    <q>'HookyQR.JSDocTagComplete'</q><span class="script-operator">,</span>
+    <q>'johnpapa.Angular2'</q><span class="script-operator">,</span>
+    <q>'johnpapa.angular-essentials'</q><span class="script-operator">,</span>
+    <q>'johnpapa.winteriscoming'</q><span class="script-operator">,</span>
+    <q>'lolkush.quickstart'</q><span class="script-operator">,</span>
+    <q>'mkaufman.HTMLHint'</q><span class="script-operator">,</span>
+    <q>'msjsdiag.debugger-for-chrome'</q><span class="script-operator">,</span>
+    <q>'ms-mssql.mssql'</q><span class="script-operator">,</span>
+    <q>'ms-vscode.csharp'</q><span class="script-operator">,</span>
+    <q>'ms-vscode.PowerShell'</q><span class="script-operator">,</span>
+    <q>'natewallace.angular2-inline'</q><span class="script-operator">,</span>
+    <q>'sidthesloth.html5-boilerplate'</q><span class="script-operator">,</span>
+    <q>'xabikos.JavaScriptSnippets'</q><span class="script-operator">,</span>
+    <q>'Zignd.html-css-class-completion'</q>
+)
+<var>$InstalledExtensions</var> <span class="script-operator">=</span> (<span class="script-command">code</span> <span class="script-commandargument">--list-extensions</span>) <span class="script-operator">-split</span> <q>'\r\n?|\n'</q>;
+<var>$RecommendedExtensions</var> <span class="script-operator">|</span> <span class="script-command">ForEach-Object</span> {
+    <span class="script-keyword">if</span> (<var>$InstalledExtensions</var> <span class="script-operator">-contains</span> <var>$_</var>) {
+        <q>"$_ is already installed."</q> <span class="script-operator">|</span> <span class="script-command">Write-Host</span>;
+    } <span class="script-keyword">else</span> {
+        <span class="script-command">code</span> <span class="script-commandargument">--install-extension</span> <var>$_</var>;
+    }
+}</code></pre>
+                    </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h3>NPM Modules</h3></div>
+                <div class="card-body">
+                    I have found that for some modules, it is best to install them globally if you intend to use them. When you actually use them in your project, it's good to install them locally as well. Following are some of the modules I found I needed to install globally:
                     <ul>
-                        <li>Go to <a href="https://git-scm.com/" target="_blank">https://git-scm.com/</a> to download the client that works well with Visual Studio Code.</li>
-                        <li>Download GitHub Desktop from <a href="https://desktop.github.com/" target="_blank">https://desktop.github.com/</a>
-                            to make it easier to create and manage repositories that are cloned locally from Git.</li>
+                        <li><strong>gulp:</strong> This can be useful for defining more complicated tasks.</li>
+                        <li><strong>uglify-js:</strong> This is used for compiling many JavaScript files into a single distributable.</li>
+                        <li><strong>mocha:</strong> This is a unit testing framework.</li>
+                        <li><strong>eslint:</strong> Error checking for JavaScript</li>
+                        <li><strong>@types:</strong> This contains many modules which provide typescript definitions</li>
+                        <ul>
+                            <li>@types/core-js</li>
+                            <li>@types/node</li>
+                            <li>@types/jquery</li>
+                            <li>@types/mocha</li>
+                            <li>@types/angular</li>
+                            <li>@types/uglify-js</li>
+                            <li>@types/bootstrap</li>
+                        </ul>
+                        <li><strong>generator-code:</strong> Creates a boilerplace file and folder structure to create your own Visual Code extension or customization package.</li>
+                        <li><strong>jshint:</strong> Adds JavaScript intellisense.</li>
+                        <li><strong>tslint:</strong> Error checking for TypeScript</li>
+                        <li><strong>typescript:</strong> Adds TypeScript intellisense.</li>
+                        <li><strong>vsce:</strong> Assists with publishing your own Visual Studio code extensions.</li>
+                        <li><strong>yo:</strong> Scaffolding system which services as the base framework for many other modules  which create boilerplate code for many project types.  These other modules should also be installed globally, as well. Following are some generator modules which use yo:</li>
+                        <ul>
+                            <li><strong>angular:</strong> AngularJS project</li>
+                            <li><strong>gulp-angular:</strong> AngularJS project with Gulp</li>
+                            <li><strong>webapp:</strong> Front-end web app</li>
+                            <li><strong>javascript:</strong> JavaScript library</li>
+                            <li><strong>node:</strong> node.js module</li>
+                            <li><strong>bootstrap:</strong> Add bootstrap to a project</li>
+                            <li><strong>node-typescript:</strong> Node.Js module  using TypeScript</li>
+                        </ul>
                     </ul>
-                </li>
-                <li><h2>Microsoft SDKs</h2>
-                    Desired .NET Core and .NET Framework  versions can be downloaded from
-                    <a href="https://www.microsoft.com/net/download/visual-studio-sdks" target="_blank">https://www.microsoft.com/net/download/visual-studio-sdks</a>.
-                </li>
-                <li><h2>Node.js</h2>
-                    The installer for node.js can be obtained from <a href="https://nodejs.org" target="_blank">https://nodejs.org</a>.
-                </li>
-                <li><h2>Visual Studio Code</h2>
-                    Installer can be downloaded from <a href="https://code.visualstudio.com/download" target="_blank">https://code.visualstudio.com/download</a>.
-                </li>
-                <li><h2>Configure global git settings for credential helper and email address</h2>
-                    For Windows installations, it's probably best to use the Windows Credential Store to store your Git login credentials,
-                    so you don't have to enter your username and password every time you synchronize with the remote repository.
-                    <a href="git.html#CredentialHelper">Click here for information about configuring the credential helper</a>
-                </li>
-            </ol>
+                    <div class="card">
+                        <div class="card-header"><h4>View clean list of top-level modules installed</h4></div>
+                        <div class="card-body">
+                            The following command will produce a bare minimum list of modules that will need to be installed in order to reproduce re-produce the global module installations on another environment:
+                            <pre class="console-pane pre-scrollable"><code>((<span class="script-command">npm</span> <span class="script-commandargument">list</span> <span class="script-commandparameter">-g</span>) <span class="script-operator">-split</span> <q>'\r\n?|\n'</q>) <span class="script-operator">|</span> <span class="script-command">Where-Object</span> { <var>$_</var> <span class="script-operator">-match</span> <q>'^[`+]--'</q> } <span class="script-operator">|</span> <span class="script-command">ForEach-Object</span> { <var>$_</var><span class="script-operator">.</span>Substring(<span class="script-number">4</span>) }</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     </body>
 </html>

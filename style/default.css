@@ -1,0 +1,70 @@
+:root {
+    --light-yellow: #f7ff84;
+    --dark-indigo: #3f0a94;
+}
+header.defaultHeader {
+    background-color: var(--dark-indigo);
+}
+header.defaultHeader h1 {
+    color: var(--light-yellow);
+    display: inline;
+}
+header.defaultHeader h2 {
+    color: var(--light-yellow);
+    display: inline;
+    padding-left: 24pt;
+}
+dl dt { margin: 2pt 0pt 2pt 0pt }
+dl dd { margin: 0pt 0pt 2pt 8pt; }
+.console-pane,
+.script-pane {
+    border: 2px double var(--secondary);
+    padding: 4pt;
+}
+.console-pane code,
+.script-pane code {
+    white-space: pre;
+    overflow: visible;
+}
+.console-pane,
+.script-pane,
+.console-pane code,
+.script-pane code,
+.console-pane var,
+.script-pane var {
+    font: var(--font-family-monospace);
+    font-size: small;
+    font-weight: normal;
+}
+.script-pane,
+.script-pane .code {
+    color: #000000;
+    background-color: #ffffff;
+}
+.console-pane,
+.console-pane .code {
+    color: #f5f5f5;
+    background-color: #012456;
+}
+.script-pane .script-looplabel, .script-pane .script-keyword { color: #00008b; }
+.script-pane .script-operator { color: #a9a9a9; }
+.script-pane .script-attribute { color: #00bfff; }
+.script-pane .script-number { color: #800080; }
+.script-pane .script-command { color: #0000ff; }
+.script-pane .script-commandparameter { color: #000080; }
+.script-pane .script-comment { color: #006400; }
+.script-pane var, .console-pane var { color: #ff4500; }
+.script-pane .script-type { color: #008080; }
+.script-pane q { color: #8b0000; }
+.script-pane .script-commandargument { color: #8a2be2; }
+.console-pane .console-looplabel, .console-pane .console-command, .console-pane .console-keyword { color: #e0ffff; }
+.console-pane .console-operator { color: #d3d3d3; }
+.console-pane .console-attribute { color: #b0c4de; }
+.console-pane .console-number { color: #ffe4c4; }
+.console-pane .console-commandparameter { color: #ffe4b5; }
+.console-pane .console-comment { color: #98fb98; }
+.console-pane .console-type { color: #8fbc8f; }
+.console-pane q { color: #db7093; }
+.console-pane .console-commandargument { color: #ee82ee; }
+.script-pane q:before, .console-pane q:before { content: no-open-quote; }
+.script-pane q:after, .console-pane q:after { content: no-close-quote; }
