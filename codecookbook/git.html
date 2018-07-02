@@ -49,12 +49,14 @@
                         </div>
                     </div>
                     <div class="card">
-                        <div class="card-header"><h4 id="SetCredentialHelperLogin">Set login credential helper</h4></div>
+                        <div class="card-header"><h4 id="SetCredentialHelperLogin">Set login for credential helper</h4></div>
                         <div class="card-body">
-                            The following will configure git to use alternate login credentials <a href="https://github.com/Microsoft/Git-Credential-Manager-for-Windows" target="_blank">windows credential helper</a>:
-                            <pre class="console-pane pre-scrollable"><code>git config credential.microsoft.visualstudio.com.username <kbd>username</kbd></code></pre>
-                            To apply this setting globally, use the --global switch:
+                            When using the <a href="https://github.com/Microsoft/Git-Credential-Manager-for-Windows" target="_blank">windows credential helper</a>, and you need to use
+                            alternate login credentials, you may find that it continues to try to authenticate using the same credentials, regardless of the erwine.email setting.
+                            To force the <a href="https://github.com/Microsoft/Git-Credential-Manager-for-Windows" target="_blank">windows credential helper</a> to use alternate login credentials,
+                            you can apply the following global configuration setting:
                             <pre class="console-pane pre-scrollable"><code>git config --global credential.microsoft.visualstudio.com.username <kbd>username</kbd></code></pre>
+                            <em>Applying this setting to the local repository seemed to have no effect the last time it was tried.</em>
                         </div>
                     </div>
                     <div class="card-deck">
