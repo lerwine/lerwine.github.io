@@ -3,108 +3,6 @@ import * as Path from 'path';
 import * as Tmp from 'tmp';
 import * as child_process from 'child_process';
 
-//var git = require("simple-git");
-// https://www.npmjs.com/package/simple-git
-declare interface GitCallback<T> { (err: any, result: T, ...args: any[]): void }
-declare interface GitOptions { [index: string]: string|null }
-declare class BranchSummary {
-    detached: boolean;
-    current?: string;
-    all: string[];
-    branches: {
-        [index: string]: {
-            current: string,
-            name: string,
-            commit: string,
-            label: string
-        }
-    }
-}
-declare class FetchSummary {
-    raw: any;
-    remote: string;
-    branches: {
-        name: string,
-        tracking: string
-    }[];
-    tags: {
-        name: string,
-        tracking: string
-    }[];
-}
-declare class CommitSummary {
-    branch: string;
-    commit: string;
-    summary: {
-        changes: number,
-        insertions: number,
-        deletions: number
-    };
-    author?: {
-        email: string,
-        name: string
-    };
-}
-declare class PullSummary {
-    files: string[];
-    insertions: { [index: string]: number };
-    deletions: { [index: string]: number };
-    summary: {
-        changes: number,
-        insertions: number,
-        deletions: number
-    };
-}
-declare class FileStatusSummary {
-    path: string;
-    from: string;
-    index: number;
-    working_dir: string;
-    summary: {
-        changes: number,
-        insertions: number,
-        deletions: number
-    };
-}
-declare class StatusSummary {
-    ahead: number;
-    behind: number;
-    current?: string;
-    tracking?: string;
-    not_added: string[];
-    conflicted: string[];
-    created: string[];
-    deleted: string[];
-    modified: string[];
-    renamed: string[];
-    files: FileStatusSummary[];
-    staged: string[];
-    isClean(): boolean;
-}
-declare class Git {
-    add(files: string|string[], then?: GitCallback<any>): Git;
-    branch(then?: GitCallback<BranchSummary>, ...args: any[]): Git;
-    branch(options?: GitOptions, then?: GitCallback<BranchSummary>, ...args: any[]): Git;
-    branchLocal(then?: GitCallback<BranchSummary>, ...args: any[]): Git;
-    checkout(what: string|string[], then?: GitCallback<any>): Git;
-    checkoutBranch(branchName: string, startPoint: string, then?: GitCallback<any>): Git;
-    checkoutLocalBranch(branchName: string, then?: GitCallback<any>): Git;
-    commit(message: string|string[], files: string|string[], options?: GitOptions, then?: GitCallback<CommitSummary>, ...args: any[]): Git;
-    commit(message: string|string[], options?: GitOptions, then?: GitCallback<CommitSummary>, ...args: any[]): Git;
-    pull(then?: GitCallback<PullSummary>, ...args: any[]): Git;
-    pull(remote?: string, branch?: string, options?: GitOptions, then?: GitCallback<PullSummary>, ...args: any[]): Git;
-    push(remote?: string|string[], branch?: string, then?: GitCallback<any>, ...args: any[]): Git;
-    fetch(then?: GitCallback<FetchSummary>, ...args: any[]): Git;
-    fetch(remote?: string, branch?: string, then?: GitCallback<FetchSummary>, ...args: any[]): Git;
-    fetch(options?: GitOptions, remote?: string, branch?: string, then?: GitCallback<FetchSummary>, ...args: any[]): Git;
-    revert(commit: string, options?: GitOptions, then?: GitCallback<any>, ...args: any[]): Git;
-    rm(files: string|string[], then?: GitCallback<any>): Git;
-    raw(args: string[], then?: GitCallback<any>): Git;
-    stash(options?: GitOptions|string[], then?: GitCallback<any>, ...args: any[]): Git;
-    status(then?: GitCallback<StatusSummary>, ...args: any[]): Git;
-}
-declare var git: Git;
-
 type denominationType = "bytes"|"KB"|"MB"|"GB"|"TB";
 const Denomination_Byte: denominationType = "bytes";
 const Denomination_KB: denominationType = "KB";
@@ -514,6 +412,7 @@ interface IPackageConfig {
     license: string|null|undefined
 }
 
+/*
 function publishToPagesBranch(localBranchSummary: BranchSummary, sourceFileSystemInfo: FileSystemInfo): void {
     let currentBranchSummary: BranchSummary = localBranchSummary;
     try {
@@ -581,7 +480,7 @@ function validateRemoteBranch(remoteBranchSummary: BranchSummary): boolean {
         return true;
     return false;
 }
-
+*/
 let packageConfig: IPackageConfig = <IPackageConfig>loadJSONConfig("./package.json");
 if (typeof(packageConfig.main) != "string") {
     var t = typeof(packageConfig.main);
@@ -591,7 +490,20 @@ if (typeof(packageConfig.main) != "string") {
 } else if (packageConfig.main.length == 0)
     throw new Error("'main' package configuration setting was empty. Cannot continue.");
 let sourceFileSystemInfo: FileSystemInfo = new FileSystemInfo(Path.dirname(packageConfig.main));
-if (sourceFileSystemInfo.exists || !sourceFileSystemInfo.isDirectory)
-    throw new Error("Directory for 'main' package configuration setting does not exist. Cannot continue.");
+if (!(sourceFileSystemInfo.exists && sourceFileSystemInfo.isDirectory))
+    throw new Error("Directory for 'main' package configuration setting ('" + sourceFileSystemInfo.path + "') does not exist. Cannot continue.");
 
-console.log(child_process.execSync("git"));
+let gitPath: string|undefined = process.env.Path;
+var searchPaths = (typeof(gitPath) == "string" && gitPath.length > 0) ? gitPath.split(Path.delimiter) : [];
+gitPath = undefined;
+for (var i = 0; i < searchPaths.length; i++) {
+    let testPath: string = Path.join(searchPaths[i], "git.exe");
+    if (FS.existsSync(testPath) && FS.statSync(testPath).isFile()) {
+        gitPath = testPath;
+        break;
+    }
+}
+if (typeof(gitPath) != "string")
+    throw new Error("Git was not in any of the search paths.");
+var r = child_process.execSync('"' + gitPath + '"');
+console.log(r);

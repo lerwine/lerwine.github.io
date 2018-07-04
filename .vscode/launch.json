@@ -5,11 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "node",
+            "type": "PowerShell",
             "request": "launch",
             "name": "Publish Pages",
-            "program": "${workspaceFolder}/publish.js",
-            "args": [ ]
+            "script": "${workspaceFolder}/publish.ps1",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "chrome",

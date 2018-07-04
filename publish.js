@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const FS = require("fs");
 const Path = require("path");
-const Tmp = require("tmp");
 const child_process = require("child_process");
 const Denomination_Byte = "bytes";
 const Denomination_KB = "KB";
@@ -401,10 +400,11 @@ function loadJSONConfig(path) {
         throw new Error("Path does not point to a file: " + path);
     return JSON.parse(FS.readFileSync(path).toString());
 }
-function publishToPagesBranch(localBranchSummary, sourceFileSystemInfo) {
-    let currentBranchSummary = localBranchSummary;
+/*
+function publishToPagesBranch(localBranchSummary: BranchSummary, sourceFileSystemInfo: FileSystemInfo): void {
+    let currentBranchSummary: BranchSummary = localBranchSummary;
     try {
-        var opItems = [];
+        var opItems: IFsOp[] = [];
         var tempDir = Tmp.dirSync();
         try {
             var tempFileInfo = new FileSystemInfo(tempDir.name);
@@ -414,11 +414,8 @@ function publishToPagesBranch(localBranchSummary, sourceFileSystemInfo) {
                 // TODO: Pull "gh-pages"
                 opItems = copyFiles(tempFileInfo, new FileSystemInfo(__dirname), true, true);
             }
-        }
-        finally {
-            tempDir.removeCallback();
-        }
-        if (opItems.length == 0 && opItems.filter(function (a) {
+        } finally { tempDir.removeCallback(); }
+        if (opItems.length == 0 && opItems.filter(function(a: IFsOp) {
             if (isIOpError(a)) {
                 if (isIFsBinaryOp(a))
                     console.log("Publication staging failure " + JSON.stringify({ sourceDir: a.source.dirname, targetDir: a.target.dirname, name: a.target.name }) + ": " + a.error);
@@ -430,39 +427,40 @@ function publishToPagesBranch(localBranchSummary, sourceFileSystemInfo) {
             }
             return false;
         }).length == 0) {
-            opItems.map(function (a) {
+            (<IFsBinaryOp[]>opItems).map(function(a: IFsBinaryOp) {
                 console.log("git checkout " + localBranchSummary.current + " -- " + Path.relative(sourceFileSystemInfo.path, a.target.path));
             });
         }
-    }
-    finally {
-        if (typeof (currentBranchSummary.current) == "string" && currentBranchSummary.current == "gh-pages") {
+    } finally {
+        if (typeof(currentBranchSummary.current) == "string" && currentBranchSummary.current == "gh-pages") {
             // TODO: Stage and check in
             // TODO: Push "gh-pages"
-            if (typeof (localBranchSummary.current) == "string") {
+            if (typeof(localBranchSummary.current) == "string") {
                 // TODO: check out localBranchSummary.current
             }
         }
     }
 }
-function publishFromLocalBranch(remoteBranchSummary, localBranchSummary, sourceFileSystemInfo) {
+
+function publishFromLocalBranch(remoteBranchSummary: BranchSummary, localBranchSummary: BranchSummary, sourceFileSystemInfo: FileSystemInfo): void {
     console.log("publishFromLocalBranch");
-    if (typeof (localBranchSummary.current) != "string" || localBranchSummary.current.trim().length == 0)
+    if (typeof(localBranchSummary.current) != "string" || localBranchSummary.current.trim().length == 0)
         console.error("No local branch is checked out. Cannot continue.");
     else if (localBranchSummary.current == "gh-pages")
         console.error("'gh-pages' is the current local branch. Cannot continue.");
     else {
         var localGhPagesBranch = localBranchSummary.branches['gh-pages'];
-        if (typeof (localGhPagesBranch) != "object" || localGhPagesBranch === null)
+        if (typeof(localGhPagesBranch) != "object" || localGhPagesBranch === null)
             console.error("There is not a 'gh-pages' local branch. Cannot continue.");
         else
             publishToPagesBranch(localBranchSummary, sourceFileSystemInfo);
     }
 }
-function validateRemoteBranch(remoteBranchSummary) {
+
+function validateRemoteBranch(remoteBranchSummary: BranchSummary): boolean {
     if (remoteBranchSummary.detached)
         console.error("Current remote branch is detached. Cannot continue.");
-    else if (typeof (remoteBranchSummary.current) != "string" || remoteBranchSummary.current.trim().length == 0)
+    else if (typeof(remoteBranchSummary.current) != "string" || remoteBranchSummary.current.trim().length == 0)
         console.error("No remote branch is checked out. Cannot continue.");
     else if (remoteBranchSummary.current == "gh-pages")
         console.error("'gh-pages' is the current remote branch. Cannot continue.");
@@ -470,6 +468,7 @@ function validateRemoteBranch(remoteBranchSummary) {
         return true;
     return false;
 }
+*/
 let packageConfig = loadJSONConfig("./package.json");
 if (typeof (packageConfig.main) != "string") {
     var t = typeof (packageConfig.main);
@@ -480,7 +479,20 @@ if (typeof (packageConfig.main) != "string") {
 else if (packageConfig.main.length == 0)
     throw new Error("'main' package configuration setting was empty. Cannot continue.");
 let sourceFileSystemInfo = new FileSystemInfo(Path.dirname(packageConfig.main));
-if (sourceFileSystemInfo.exists || !sourceFileSystemInfo.isDirectory)
-    throw new Error("Directory for 'main' package configuration setting does not exist. Cannot continue.");
-console.log(child_process.execSync("git"));
+if (!(sourceFileSystemInfo.exists && sourceFileSystemInfo.isDirectory))
+    throw new Error("Directory for 'main' package configuration setting ('" + sourceFileSystemInfo.path + "') does not exist. Cannot continue.");
+let gitPath = process.env.Path;
+var searchPaths = (typeof (gitPath) == "string" && gitPath.length > 0) ? gitPath.split(Path.delimiter) : [];
+gitPath = undefined;
+for (var i = 0; i < searchPaths.length; i++) {
+    let testPath = Path.join(searchPaths[i], "git.exe");
+    if (FS.existsSync(testPath) && FS.statSync(testPath).isFile()) {
+        gitPath = testPath;
+        break;
+    }
+}
+if (typeof (gitPath) != "string")
+    throw new Error("Git was not in any of the search paths.");
+var r = child_process.execSync('"' + gitPath + '"');
+console.log(r);
 //# sourceMappingURL=publish.js.map

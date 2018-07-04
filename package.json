@@ -26,8 +26,8 @@
   "devDependencies": {
     "@types/angular": "^1.6.48",
     "@types/chai": "^4.1.4",
-    "@types/gulp-mocha": "0.0.32",
     "@types/glob": "^5.0.35",
+    "@types/gulp-mocha": "0.0.32",
     "@types/jquery": "^3.3.4",
     "@types/mocha": "^5.2.4",
     "@types/node": "^10.5.1",
@@ -41,7 +41,6 @@
     "gulp-webserver": "^0.9.1",
     "mocha": "^5.2.0",
     "path": "^0.12.7",
-    "simple-git": "^1.96.0",
     "tmp": "0.0.33",
     "typescript": "^2.9.2"
   }
