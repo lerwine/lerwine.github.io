@@ -195,14 +195,12 @@ try {
     try {
         $Status = Get-GitStatus;
         $CurrentRemote = $Status.RemoteBranches | Where-Object { $_.Branch -eq $Status.CurrentBranch }
-        Export-GitChangesToRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
-        Import-GitChangesFromRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
+        Export-GitChangesToRemote -Remote $CurrentRemote.Remote -Repository $Status.CurrentBranch;
+        Import-GitChangesFromRemote -Remote $CurrentRemote.Remote -Repository $Status.CurrentBranch;
         Copy-DirectoryRecursive -SourceDirectory $TempFolder -TargetDirectory $PSScriptRoot;
         Submit-GitChanges -Message 'Publish updates';
-        Export-GitChangesToRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
+        Export-GitChangesToRemote -Remote $CurrentRemote.Remote -Repository $Status.CurrentBranch;
     } finally { Select-GitBranch -Name $OriginalStatus.CurrentBranch }
 } finally { <#Remove-Item -Path $TempFolder -Force#> }
 ('.gitignore', 'LICENSE') | ForEach-Object { Copy-Item -LiteralPath ($PSScriptRoot | Join-Path -ChildPath $_) -Destination ($TempFolder | Join-Path -ChildPath $_) }
-
-
 
