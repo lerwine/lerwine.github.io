@@ -34,7 +34,14 @@ Function Copy-DirectoryRecursive {
     @(Get-ChildItem -LiteralPath $SourceDirectory -File) | ForEach-Object {
         $TargetPath = $TargetDirectory | Join-Path -ChildPath $_.Name;
         if (($TargetPath | Test-Path -PathType Container)) { Remove-DirectoryContentsRecursive -TargetDirectory $TargetPath }
-        Copy-Item -LiteralPath $_.FullName -Destination $TargetPath -Force;
+        if ($TargetPath | Test-Path -PathType Leaf) {
+            $SourceContent = (Get-Content -LiteralPath $_.FullName -Force) | Out-String;
+            $TargetContent = (Get-Content -LiteralPath $TargetPath -Force) | Out-String;
+            if ($SourceContent -ceq $TargetContent) { $TargetPath = $null }
+        }
+        if ($TargetPath -ne $null) {
+            Copy-Item -LiteralPath $_.FullName -Destination $TargetPath -Force;
+        }
     }
 }
 
@@ -135,6 +142,35 @@ Function Select-GitBranch {
         }
     }
 }
+
+Function Import-GitChangesFromRemote {
+    Param(
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string]$Remote,
+        
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string]$Repository
+    )
+
+    Process {
+        (git "pull" "--tags" $Remote $Repository) | Out-Null;
+    }
+}
+
+Function Export-GitChangesToRemote {
+    Param(
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string]$Remote,
+        
+        [Parameter(Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
+        [string]$Repository
+    )
+
+    Process {
+        (git "push" $Remote "$Repository`:$Repository") | Out-Null;
+    }
+}
+
 $JSonText = (Get-Content -LiteralPath ($PSScriptRoot | Join-Path -ChildPath 'package.json') | Out-String).Trim();
 $PackageJson = $JSonText | ConvertFrom-Json;
 if ($PackageJson.main -isnot [string]) { throw "package.json does not have a 'main' setting." }
@@ -153,9 +189,20 @@ $TempFolder = $env:TEMP | Join-Path -ChildPath ([Guid]::NewGuid().ToString('N'))
 (New-item -Path $TempFolder -ItemType "Directory") | Out-Null;
 try {
     Copy-DirectoryRecursive -SourceDirectory $SourceDir -TargetDirectory $TempFolder;
+    Submit-GitChanges -Message 'Publish updates';
+    $OriginalStatus = Get-GitStatus;
+    Select-GitBranch -Name 'gh-pages';
+    try {
+        $Status = Get-GitStatus;
+        $CurrentRemote = $Status.RemoteBranches | Where-Object { $_.Branch -eq $Status.CurrentBranch }
+        Export-GitChangesToRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
+        Import-GitChangesFromRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
+        Copy-DirectoryRecursive -SourceDirectory $TempFolder -TargetDirectory $PSScriptRoot;
+        Submit-GitChanges -Message 'Publish updates';
+        Export-GitChangesToRemote -Remote $CurrentRemote -Repository $Status.CurrentBranch;
+    } finally { Select-GitBranch -Name $OriginalStatus.CurrentBranch }
 } finally { <#Remove-Item -Path $TempFolder -Force#> }
 ('.gitignore', 'LICENSE') | ForEach-Object { Copy-Item -LiteralPath ($PSScriptRoot | Join-Path -ChildPath $_) -Destination ($TempFolder | Join-Path -ChildPath $_) }
-$GitStatus
 
-Submit-GitChanges -Message 'Added new publishing script';
-Select-GitBranch -Name 'gh-pages'
+
+
