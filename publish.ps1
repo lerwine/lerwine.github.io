@@ -40,20 +40,51 @@ Function Copy-DirectoryRecursive {
 
 
 Function Get-GitStatus {
-    Param()
-    $GitStatus = @{
-        Modified = @();
-        Deleted = @();
-        Added = @();
-        NotStaged = @();
+    [CmdletBinding(DefaultParameterSetName = 'All')]
+    Param(
+        [Parameter(Mandatory = $true, ParameterSetName = 'Branches')]
+        [switch]$BranchesOnly,
+        
+        [Parameter(Mandatory = $true, ParameterSetName = 'Files')]
+        [switch]$FilesOnly,
+
+        [Parameter(ParameterSetName = 'All')]
+        [switch]$All
+    )
+    $GitStatus = @{ };
+    if ($PSCmdlet.ParameterSetName -eq 'All' -or $PSCmdlet.ParameterSetName -eq 'Branches') {
+        $GitStatus['CurrentBranch'] = $null;
+        $GitStatus['LocalBranches'] = @();
+        $GitStatus['RemoteBranches'] = @();
+    
+        $GitStatus.LocalBranches = @(((git 'branch' '--list') | Out-String) -split '\r\n?|\n') | ForEach-Object {
+            if ($_ -match '^\s*(\*\s+)?(\S+(?:\s+\S+)*)\s*$') {
+                if ($Matches[1] -ne $null) { $GitStatus.CurrentBranch = $Matches[2] }
+                $Matches[2] | Write-Output;
+            }
+        }
+        $GitStatus.RemoteBranches = @(((git 'branch' '--list' '--remote') | Out-String) -split '\r\n?|\n') | ForEach-Object {
+            if ($_ -match '^\s*(?:\*\s+)?(\S+(?:\s+\S+)*)/(\S+(?:\s+\S+)*)\s*$') {
+                (New-Object -TypeName 'System.Management.Automation.PSObject' -Property @{
+                    Remote = $Matches[1];
+                    Branch = $Matches[2];
+                }) | Write-Output;
+            }
+        }
     }
-    @(((git 'status' '-s') | Out-String) -split '\r\n?|\n') | ForEach-Object {
-        if ($_ -match '^\s*([^\s]+)\s*(\S+(?:\s+\S+)*)\s*$') {
-            switch ($Matches[1]) {
-                'M' { $GitStatus.Modified += @($Matches[2]); break; }
-                'D' { $GitStatus.Deleted += @($Matches[2]); break; }
-                'A' { $GitStatus.Added += @($Matches[2]); break; }
-                default { $GitStatus.NotStaged += @($Matches[2]); break; }
+    if ($PSCmdlet.ParameterSetName -eq 'All' -or $PSCmdlet.ParameterSetName -eq 'Files') {
+        $GitStatus['Modified'] = @();
+        $GitStatus['Deleted'] = @();
+        $GitStatus['Added'] = @();
+        $GitStatus['NotStaged'] = @();
+        @(((git 'status' '-s') | Out-String) -split '\r\n?|\n') | ForEach-Object {
+            if ($_ -match '^\s*([^\s]+)\s*(\S+(?:\s+\S+)*)\s*$') {
+                switch ($Matches[1]) {
+                    'M' { $GitStatus.Modified += @($Matches[2]); break; }
+                    'D' { $GitStatus.Deleted += @($Matches[2]); break; }
+                    'A' { $GitStatus.Added += @($Matches[2]); break; }
+                    default { $GitStatus.NotStaged += @($Matches[2]); break; }
+                }
             }
         }
     }
@@ -66,16 +97,44 @@ Function Submit-GitChanges {
         [string]$Message
     )
 
-    $GitStatus = Get-GitStatus;
+    $GitStatus = Get-GitStatus -FilesOnly;
 
     if ($GitStatus.NotChanged.Count -gt 0) {
         $GitStatus.NotChanged | ForEach-Object { (git 'add' $_ ) | Out-Null }
     }
     if ($GitStatus.Modified.Count -gt 0 -or $GitStatus.Deleted.Count -gt 0 -or $GitStatus.Added.Count -gt 0 -or $GitStatus.NotStaged.Count -gt 0) {
-        (git 'commit' '-m' $Message '-q')
+        (git 'commit' '-m' $Message '-a' '-q')
     }
 }
 
+Function Select-GitBranch {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [string]$Name
+    )
+
+    $GitStatus = Get-GitStatus;
+    if ($GitStatus.Modified.Count -gt 0 -or $GitStatus.Deleted.Count -gt 0 -or $GitStatus.Added.Count -gt 0 -or $GitStatus.NotStaged.Count -gt 0) {
+        if ($GitStatus.CurrentBranch -ne $Name) { throw "Cannot change branch - Changes need to be checked in" }
+    } else {
+        if ($GitStatus.CurrentBranch -ne $Name) {
+            $bn = $GitStatus.LocalBranches | Where-Object { $_ -ceq $Name } | Select-Object -First 1;
+            if ($bn -eq $null) { $GitStatus.LocalBranches | Where-Object { $_ -ieq $Name } | Select-Object -First 1 }
+            if ($bn -eq $null) {
+                $bn = $GitStatus.RemoteBraches | Where-Object { $_.Branch -ceq $Name } | Select-Object -First 1;
+                if ($bn -eq $null) {
+                    $GitStatus.RemoteBraches | Where-Object { $_.Branch -ieq $Name } | Select-Object -First 1;
+                    if ($bn -eq $null) { throw "Branch $Name not found." }
+                }
+                (git 'checkout' '-b' $bn.Remote '--track' "$($bn.Remote)/$($bn.Branch)")
+            } else {
+                (git 'checkout' $bn)
+            }
+            $GitStatus = Get-GitStatus -BranchesOnly;
+            if ($GitStatus.CurrentBranch -ne $Name) { throw "Failed to switch branches" }
+        }
+    }
+}
 $JSonText = (Get-Content -LiteralPath ($PSScriptRoot | Join-Path -ChildPath 'package.json') | Out-String).Trim();
 $PackageJson = $JSonText | ConvertFrom-Json;
 if ($PackageJson.main -isnot [string]) { throw "package.json does not have a 'main' setting." }
@@ -99,3 +158,4 @@ try {
 $GitStatus
 
 Submit-GitChanges -Message 'Added new publishing script';
+Select-GitBranch -Name 'gh-pages'
