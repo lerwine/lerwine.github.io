@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "target": "es2017",
+        "module":"commonjs",
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": ".",
+        "strict": true,
+        "declarationMap": true,
+        "importHelpers": true,
+        "isolatedModules": false,
+        "lib": [ "es2017", "dom" ]
+    },
+    "files": [ "./publish.ts" ]
+}

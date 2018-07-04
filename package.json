@@ -1,0 +1,48 @@
+{
+  "name": "lerwine.github.io",
+  "version": "1.0.0",
+  "description": "Documentation for Lenny's repositories",
+  "main": "dist/index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lerwine/lerwine.github.io.git"
+  },
+  "author": "Leonard T. Erwine",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/lerwine/lerwine.github.io/issues"
+  },
+  "homepage": "https://github.com/lerwine/lerwine.github.io#readme",
+  "dependencies": {
+    "angular": "^1.7.2",
+    "bootstrap": "^4.1.1",
+    "bootstrap-table": "^1.12.1",
+    "jquery": "^3.3.1",
+    "popper.js": "^1.14.3"
+  },
+  "devDependencies": {
+    "@types/angular": "^1.6.48",
+    "@types/chai": "^4.1.4",
+    "@types/gulp-mocha": "0.0.32",
+    "@types/glob": "^5.0.35",
+    "@types/jquery": "^3.3.4",
+    "@types/mocha": "^5.2.4",
+    "@types/node": "^10.5.1",
+    "@types/tmp": "0.0.33",
+    "chai": "^4.1.2",
+    "glob": "^7.1.2",
+    "gulp": "^3.9.1",
+    "gulp-changed": "^3.2.0",
+    "gulp-mocha": "^6.0.0",
+    "gulp-typescript": "^5.0.0-alpha.2",
+    "gulp-webserver": "^0.9.1",
+    "mocha": "^5.2.0",
+    "path": "^0.12.7",
+    "simple-git": "^1.96.0",
+    "tmp": "0.0.33",
+    "typescript": "^2.9.2"
+  }
+}
