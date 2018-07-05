@@ -16,17 +16,26 @@
     "url": "https://github.com/lerwine/lerwine.github.io/issues"
   },
   "homepage": "https://github.com/lerwine/lerwine.github.io#readme",
+  "directories": {
+    "lib": "dist"
+  },
   "dependencies": {
+    "@types/vinyl-fs": "^2.4.8",
     "angular": "^1.7.2",
     "bootstrap": "^4.1.1",
     "bootstrap-table": "^1.12.1",
+    "gulp-inject-string": "^1.1.1",
     "jquery": "^3.3.1",
-    "popper.js": "^1.14.3"
+    "popper.js": "^1.14.3",
+    "run-sequence": "^2.2.1"
   },
   "devDependencies": {
     "@types/angular": "^1.6.48",
     "@types/chai": "^4.1.4",
     "@types/glob": "^5.0.35",
+    "@types/gulp": "^4.0.5",
+    "@types/gulp-concat": "0.0.32",
+    "@types/gulp-if": "0.0.33",
     "@types/gulp-mocha": "0.0.32",
     "@types/jquery": "^3.3.4",
     "@types/mocha": "^5.2.4",
@@ -36,6 +45,10 @@
     "glob": "^7.1.2",
     "gulp": "^3.9.1",
     "gulp-changed": "^3.2.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-fail": "^1.0.5",
+    "gulp-git": "^2.7.0",
+    "gulp-if": "^2.0.2",
     "gulp-mocha": "^6.0.0",
     "gulp-typescript": "^5.0.0-alpha.2",
     "gulp-webserver": "^0.9.1",
