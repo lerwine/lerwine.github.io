@@ -133,7 +133,7 @@ function convertFromGitChangeShortFormat(s) {
 }
 
 function TrackedGitChange(str) {
-    var type = (str.length == 0) ? "" : str.subsr(0, 1);
+    var type = (typeof(str) != "string" || str.length == 0) ? "" : str.substr(0, 1);
     var matchResult, i;
     switch (type) {
         case "1":
@@ -222,7 +222,7 @@ function TrackedGitChange(str) {
     this.workTreeFileMode = parseInt(matchResult[9], 8);
     this.headObjectName = matchResult[10];
     this.indexObjectName = matchResult[11];
-    if (type == "normal") {
+    if (this.type == "normal") {
         this.score = undefined;
         this.pathName = matchResult[12];
     } else {
@@ -261,8 +261,8 @@ TrackedGitChange.prototype.stage3FileMode = 0;
 TrackedGitChange.prototype.stage1ObjectName = "";
 TrackedGitChange.prototype.stage2ObjectName = "";
 TrackedGitChange.prototype.stage3ObjectName = "";
-TrackedGitChange.ordinaryRe = /^1\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])([M.])([U.]))\s+([0-7]+)\s+([0-7]+)\s+([0-7])\s+(\S+)\s+(\S+)\s+(.+)$/;
-TrackedGitChange.copiedRe = /^2\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])([M.])([U.]))\s+([0-7]+)\s+([0-7]+)\s+([0-7])\s+(\S+)\s+(\S+)\s+([RC])(\d+)\s+([^\t])\t(.+)$/;
+TrackedGitChange.ordinaryRe = /^1\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])([M.])([U.]))\s+([0-7]+)\s+([0-7]+)\s+([0-7]+)\s+(\S+)\s+(\S+)\s+(.+)$/;
+TrackedGitChange.copiedRe = /^2\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])([M.])([U.]))\s+([0-7]+)\s+([0-7]+)\s+([0-7]+)\s+(\S+)\s+(\S+)\s+([RC])(\d+)\s+([^\t])\t(.+)$/;
 TrackedGitChange.unmergedRe = /^u\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])([M.])([U.]))\s+([0-7]+)\s+([0-7]+)\s+([0-7]+)\s+([0-7]+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$/;
 
 function GitStatus(s) {
@@ -308,16 +308,12 @@ function GitStatus(s) {
                 break;
             default:
                 if (typeof(matchResult[5]) == "string") {
-                    i = parseInt(matchResult[5]);
-                    if (!isNaN(i))
-                        this.aheadCount = i;
-                    i = parseInt(matchResult[6]);
-                    if (!isNaN(i))
-                        this.behindCount = i;
+                    this.aheadCount = parseInt(matchResult[5]);
+                    this.behindCount = parseInt(matchResult[6]);
                 }
                 break;
         }
-    }).filter(function(r) { return typeof(r) == "object"; });
+    }, this).filter(function(r) { return typeof(r) == "object"; });
     return this;
 }
 GitStatus.prototype.currentCommit = "";
@@ -327,7 +323,7 @@ GitStatus.prototype.aheadCount = 0;
 GitStatus.prototype.behindCount = 0;
 GitStatus.prototype.changes = [new TrackedGitChange()];
 GitStatus.prototype.ignoredChanges = [new TrackedGitChange()];
-GitStatus.gsRe = /^#\s+branch.(oid|head|upstream|ab)(([^\/]+)\/(\S.*)|(\d+)\s+\-(\d+)|.+)/;
+GitStatus.gsRe = /^#\s+branch.(oid|head|upstream|ab)\s+(([^\/]+)\/(\S.*)|\+(\d+)\s+-(\d+)|.+)/;
 
 var loadPackageResult = parseFile(Path.join(__dirname, "package.json"), function(filePath) {
     var jsonData = JSON.parse(FS.readFileSync(filePath));
@@ -366,8 +362,8 @@ var webServerStatus = {
 };
 
 var deployTaskflowState  = {
-    startingStatus: new GitStatus(),
-    currentStatus: new GitStatus(),
+    startingStatus: new GitStatus(""),
+    currentStatus: new GitStatus(""),
     localBranches: [],
     remoteBranches: [],
     tempFolder: {
@@ -443,11 +439,25 @@ gulp.task('deploy', function(done) {
                                         console.error("Could not determine current branch");
                                     else if (deployTaskflowState.startingStatus.currentBranch == "gh-pages")
                                         console.error("Cannot deploy from the 'gh-pages' branch");
-                                    else if (deployTaskflowState.startingStatus.changes.length == 1)
-                                        console.error("1 change needs to be checked in: " + JSON.stringify(deployTaskflowState.startingStatus.changes[0]));
-                                    else if (deployTaskflowState.startingStatus.changes.length > 0)
-                                        console.error(deployTaskflowState.startingStatus.changes.length + " changes need to be checked in:\n\t" + deployTaskflowState.startingStatus.changes.map(function(c) { return JSON.stringify(c); }).join("\n\t"));
-                                    else {
+                                    else if (deployTaskflowState.startingStatus.changes.length > 0) {
+                                        Git.status({ }, function(statErr, statStdout) {
+                                            var errMsg;
+                                            if (deployTaskflowState.startingStatus.changes.length == 1)
+                                                errMsg = "1 change needs to be checked in or resolved:\n";
+                                            else
+                                                errMsg = deployTaskflowState.startingStatus.changes.length + " changes need to be checked in or resolved:\n";
+                                            if (statErr) {
+                                                console.error(statErr);
+                                                console.error(errMsg);
+                                            }
+                                            else if (!statStdout)
+                                                console.error("Cannot determine current repository status; " + errMsg);
+                                            else
+                                                console.error(errMsg + statStdout);
+                                            done();
+                                        });
+                                        return;
+                                    } else {
                                         deployTaskflowState.failed = false;
                                         tmp.dir(function(err, path, cleanupCallback) {
                                             if (err) {
