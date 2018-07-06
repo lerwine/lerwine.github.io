@@ -499,6 +499,7 @@ gulp.task('copy-to-temp-folder', function(done) {
                 cleanupCallback: cleanupCallback
             };
             var writeTempStream = gulp.src(Path.join(loadPackageResult.mainRoot, "**/*"));
+            // BUG: This doesn't get invoked.
             writeTempStream.on('finish', function() {
                 done();
             });
