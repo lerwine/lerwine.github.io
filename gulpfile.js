@@ -12,7 +12,6 @@ var Concat = require('gulp-concat');
 var Git = require('gulp-git');
 var runSequence = require('run-sequence');
 
-
 function isIParseErrorResult(obj) {
     return (typeof(obj) == "object" && obj != null && !Array.isArray(obj) && typeof(obj.errorObject) != "undefined" && obj.errorObject !== null && typeof(obj.errorMessage) == "string");
 }
@@ -153,6 +152,40 @@ function TrackedGitChange(str) {
                 return;
             this.type = "unmerged";
             break;
+        case "?":
+            this.type = "untracked";
+            if (str.length > 2)
+                this.pathName = str.substr(2);
+            this.message = "Untracked file";
+            this.headFileMode = undefined;
+            this.indexFileMode = undefined;
+            this.headObjectName = undefined;
+            this.indexObjectName = undefined;
+            this.score = undefined;
+            this.stage1FileMode = undefined;
+            this.stage2FileMode = undefined;
+            this.stage3FileMode = undefined;
+            this.stage1ObjectName = undefined;
+            this.stage2ObjectName = undefined;
+            this.stage3ObjectName = undefined;
+            return this;
+        case "!":
+            this.type = "ignored";
+            if (str.length > 2)
+                this.pathName = str.substr(2);
+            this.message = "Untracked file";
+            this.headFileMode = undefined;
+            this.indexFileMode = undefined;
+            this.headObjectName = undefined;
+            this.indexObjectName = undefined;
+            this.score = undefined;
+            this.stage1FileMode = undefined;
+            this.stage2FileMode = undefined;
+            this.stage3FileMode = undefined;
+            this.stage1ObjectName = undefined;
+            this.stage2ObjectName = undefined;
+            this.stage3ObjectName = undefined;
+            return this;
     }
     if (typeof(matchResult) != "object" || matchResult === null) {
         this.message = str;
@@ -191,7 +224,7 @@ function TrackedGitChange(str) {
     this.indexObjectName = matchResult[11];
     if (type == "normal") {
         this.score = undefined;
-        this.pathname = matchResult[12];
+        this.pathName = matchResult[12];
     } else {
         this.score = parseInt(matchResult[13]);
         this.pathName = matchResult[14];
