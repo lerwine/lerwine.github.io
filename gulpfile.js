@@ -480,22 +480,22 @@ gulp.task('deploy', function(done) {
     done();
 });
 
-gulp.task('remove-temp-folder', function(cb) {
+gulp.task('remove-temp-folder', function(done) {
     if (typeof(deployTaskflowState.tempFolder) == "object" && deployTaskflowState.tempFolder !== null && typeof(deployTaskflowState.tempFolder.cleanupCallback) == "function")
         try { deployTaskflowState.tempFolder.cleanupCallback(); } catch (e) { }
         finally {
             deployTaskflowState.tempFolder = undefined;
         }
-    cb();
+    done();
 });
 
-gulp.task('copy-to-temp-folder', function(cb) {
+gulp.task('copy-to-temp-folder', function(done) {
     if (typeof(deployTaskflowState.tempFolder) != "object" || deployTaskflowState.tempFolder === null || typeof(deployTaskflowState.tempFolder.path) != "string") {
         console.error("A temp folder must be called in sequence before this task.");
-        cb();
+        done();
     } else {
         var writeTempStream = gulp.src(Path.join(loadPackageResult.mainRoot, "**/*"));
-        writeTempStream.on('finish', function() { cb(); });
+        writeTempStream.on('finish', function() { done(); });
         writeTempStream.pipe(gulp.dest(deployTaskflowState.tempFolder.path)).end();
     }
 });
