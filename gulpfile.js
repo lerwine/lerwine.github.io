@@ -367,6 +367,7 @@ var webServerStatus = {
 
 var deployTaskflowState  = {
     startingStatus: new GitStatus(),
+    currentStatus: new GitStatus(),
     localBranches: [],
     remoteBranches: [],
     tempFolder: {
@@ -448,8 +449,19 @@ gulp.task('deploy', function(done) {
                                         console.error(deployTaskflowState.startingStatus.changes.length + " changes need to be checked in:\n\t" + deployTaskflowState.startingStatus.changes.map(function(c) { return JSON.stringify(c); }).join("\n\t"));
                                     else {
                                         deployTaskflowState.failed = false;
-                                        //runSequence('create-tempFolder', 'copy-to-temp-folder', 'git-checkout-gh-pages', 'copy-from-temp-folder', 'remove-temp-folder', 'push-gh-pages', 'git-uncheckout', done);
-                                        //return;
+                                        tmp.dir(function(err, path, cleanupCallback) {
+                                            if (err) {
+                                                console.error(err);
+                                                done();
+                                            }
+                                            deployTaskflowState.tempFolder = {
+                                                path: path,
+                                                cleanupCallback: cleanupCallback
+                                            };
+                                            runSequence('remove-temp-folder', done);
+                                            //runSequence(copy-to-temp-folder', 'git-checkout-gh-pages', 'copy-from-temp-folder', 'remove-temp-folder', 'push-gh-pages', 'git-uncheckout', done);
+                                        });
+                                        return;
                                     }
                                     done();
                                 }
@@ -468,130 +480,95 @@ gulp.task('deploy', function(done) {
     done();
 });
 
-gulp.task('create-tempFolder', function(cb) {
-    if (deployTaskflowState.currentBranch.length == 0) {
-        console.error('Deployment not in progress');
-        cb();
-    } else
-        tmp.dir(function(err, path, cleanupCallback) {
-            if (err)
-                console.error(err);
-            else if (tempFolderStatus.dependencyCount == 0) {
-                tempFolderStatus.path = path;
-                tempFolderStatus.cleanupCallback = cleanupCallback;
-            } else
-                cleanupCallback();
-            tempFolderStatus.dependencyCount = tempFolderStatus.dependencyCount + 1;
-            cb();
-        });
-});
-
 gulp.task('remove-temp-folder', function(cb) {
-    if (tempFolderStatus.dependencyCount > 0) {
-        tempFolderStatus.dependencyCount = tempFolderStatus.dependencyCount - 1;
-        if (tempFolderStatus.dependencyCount == 0) {
-            tempFolderStatus.path = undefined;
-            try { tempFolderStatus.cleanupCallback(); } catch (e) { } finally { tempFolderStatus.cleanupCallback = undefined; }
+    if (typeof(deployTaskflowState.tempFolder) == "object" && deployTaskflowState.tempFolder !== null && typeof(deployTaskflowState.tempFolder.cleanupCallback) == "function")
+        try { deployTaskflowState.tempFolder.cleanupCallback(); } catch (e) { }
+        finally {
+            deployTaskflowState.tempFolder = undefined;
         }
-    }
     cb();
 });
 
 gulp.task('copy-to-temp-folder', function(cb) {
-    if (typeof(tempFolderStatus.path) != "string") {
-        console.error("create-tempfolder must be called in sequence before this task.");
+    if (typeof(deployTaskflowState.tempFolder) != "object" || deployTaskflowState.tempFolder === null || typeof(deployTaskflowState.tempFolder.path) != "string") {
+        console.error("A temp folder must be called in sequence before this task.");
         cb();
     } else {
         var writeTempStream = gulp.src(Path.join(loadPackageResult.mainRoot, "**/*"));
         writeTempStream.on('finish', function() { cb(); });
-        writeTempStream.pipe(gulp.dest(tempFolderStatus.path)).end();
+        writeTempStream.pipe(gulp.dest(deployTaskflowState.tempFolder.path)).end();
     }
 });
 
-gulp.task('git-checkout-gh-pages', function(cb) {
-    if (typeof(checkoutStatus.checkedOutBranch) == "string") {
-        if (checkoutStatus.checkedOutBranch == "gh-pages") {
-            cb();
-            return;
-        }
-        // TODO: See if we need to commit, check in, etc
-        Git.checkout('gh-pages', { }, function (err) {
-            if (err)
-                console.error(err);
-            else {
-                checkoutStatus.originalBranch.push(checkoutStatus.checkedOutBranch);
-                checkoutStatus.checkedOutBranch = 'gh-pages';
-            }
-            cb();
-        });
-    }
-    Git.exec({ args: 'branch' }, function(err, stdout) {
-        if (err) {
+gulp.task('git-checkout-gh-pages', function(done) {
+    Git.checkout('gh-pages', { }, function (err) {
+        if (err)
             console.error(err);
-            cb();
+        else {
+            Git.status({ args: "--porcelain=2 -b" }, function(statErr, statStdout) {
+                if (statErr)
+                    console.error(statErr);
+                else if (!statStdout)
+                    console.error("Cannot determine current repository status");
+                else {
+                    deployTaskflowState.currentStatus = new GitStatus(statStdout);
+                    if (deployTaskflowState.currentStatus.currentBranch.length == 0)
+                        console.error("Could not determine current branch");
+                    else if (deployTaskflowState.currentStatus.currentBranch != "gh-pages")
+                        console.error("Failed to check out the 'gh-pages' branch");
+                    done();
+                }
+            });
             return;
         }
-        
-        if (stdout) {
-            var ra = stdout.match(/(?:^|[\r\n])[^\S\r\n]*\*[^\S\r\n]*(\S+(?:[^\S\r\n]+\S+)*)/);
-            if (ra.length && ra.length > 1) {
-                if (typeof(checkoutStatus.checkedOutBranch) == "string") {
-                    if (checkoutStatus.checkedOutBranch != ra[1] && checkoutStatus.checkedOutBranch != 'gh-pages')
-                        checkoutStatus.originalBranch.push(checkoutStatus.checkedOutBranch);
-                }
-                checkoutStatus.checkedOutBranch = ra[1];
-                if (checkoutStatus.checkedOutBranch == "gh-pages") {
-                    cb();
-                    return;
-                }
-                // TODO: See if we need to commit, check in, etc
-                Git.checkout('gh-pages', { }, function (err) {
-                    if (err)
-                        console.error(err);
-                    else {
-                        checkoutStatus.originalBranch.push(checkoutStatus.checkedOutBranch);
-                        checkoutStatus.checkedOutBranch = 'gh-pages';
-                    }
-                    cb();
-                });
-            } else {
-                console.warn("Unable to determine current branch");
-            }
-        }
+        done();
     });
 });
 
-gulp.task('copy-from-temp-folder', function(cb) {
-    if (typeof(tempFolderStatus.path) != "string") {
+gulp.task('copy-from-temp-folder', function(done) {
+    if (typeof(deployTaskflowState.tempFolder) != "object" || deployTaskflowState.tempFolder === null || typeof(deployTaskflowState.tempFolder.path) != "string") {
         console.error("create-tempfolder must be called in sequence before this task.");
-        cb();
+        done();
     } else {
-        var writeTempStream = gulp.src(Path.join(tempFolderStatus.path, "**/*"));
-        writeTempStream.on('finish', function() { cb(); });
+        var writeTempStream = gulp.src(Path.join(deployTaskflowState.tempFolder.path, "**/*"));
+        writeTempStream.on('finish', function() { done(); });
         writeTempStream.pipe(gulp.dest(__dirname)).end();
     }
 });
 
-gulp.task('push-gh-pages', function(cb) {
-    cb();
+gulp.task('push-gh-pages', function(done) {
+    if (deployTaskflowState.currentStatus.currentBranch != "gh-pages")
+        console.error("gh-pages not checked out");
+    done();
 });
 
-gulp.task('git-uncheckout', function(cb) {
-    if (typeof(checkoutStatus.checkedOutBranch) == "string") {
-        if (checkoutStatus.originalBranch.length == 0) {
-            cb();
+gulp.task('git-uncheckout', function(done) {
+    if (deployTaskflowState.currentStatus.currentBranch != "gh-pages") {
+        console.error("gh-pages not checked out");
+        done();
+        return;
+    }
+    Git.checkout(deployTaskflowState.startingStatus.currentBranch , { }, function (err) {
+        if (err) {
+            console.error(err);
+            done();
             return;
         }
-        var newBranch = checkoutStatus.originalBranch.pop();
-        Git.checkout(newBranch, { }, function (err) {
-            if (err) {
-                checkoutStatus.originalBranch.push(newBranch);
-                console.error(err);
-            } else
-                checkoutStatus.checkedOutBranch = newBranch;
-            cb();
+        Git.status({ args: "--porcelain=2 -b" }, function(statErr, statStdout) {
+            if (statErr)
+                console.error(statErr);
+            else if (!statStdout)
+                console.error("Cannot determine current repository status");
+            else {
+                deployTaskflowState.currentStatus = new GitStatus(statStdout);
+                if (deployTaskflowState.currentStatus.currentBranch.length == 0)
+                    console.error("Could not determine current branch");
+                else if (deployTaskflowState.currentStatus.currentBranch != deployTaskflowState.startingStatus.currentBranch)
+                    console.error("Failed to check out the '" + deployTaskflowState.startingStatus.currentBranch + "' branch");
+                done();
+            }
         });
-    }
+    });
 });
 
 gulp.task('startWebServer', function() {
