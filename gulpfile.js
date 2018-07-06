@@ -491,6 +491,7 @@ gulp.task('copy-to-temp-folder', function(done) {
                 path: path,
                 cleanupCallback: cleanupCallback
             };
+            console.debug("Using temp folder " + path);
             return gulp.src(Path.join(loadPackageResult.mainRoot, "**/*")).pipe(gulp.dest(path));
         }
     });
