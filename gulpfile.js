@@ -268,6 +268,7 @@ TrackedGitChange.unmergedRe = /^u\s+(([MADRCU.])([MADRCU.]))\s+(?:N\.{3}|S([C.])
 function GitStatus(s) {
     this.upstream = undefined;
     this.changes = [];
+    this.ignoredChanges = [];
     var nlRe = /[\r\n]+/;
     var lines;
     if (typeof(s) == "string")
@@ -278,13 +279,17 @@ function GitStatus(s) {
         lines = [];
         s.map(function(o) { return typeof(o) == "string"; }).forEach(function(ln) { lines = lines.concat(ln.split(nlRe)); });
     }
-    
     this.changes = lines.map(function(ln) {
         if (ln.trim().length == 0)
             return;
         var type, matchResult, i;
-        if (ln.substr(0, 1) != "#")
-            return new TrackedGitChange(ln);
+        if (ln.substr(0, 1) != "#") {
+            var chg = new TrackedGitChange(ln);
+            if (chg.type != "ignored" && chg.type != "unknown")
+                return chg;
+            this.ignoredChanges.push(chg);
+            return;
+        }
         if (typeof(matchResult = ln.match(GitStatus.gsRe)) != "object" || matchResult === null || matchResult.length < 7)
             return;
         switch (matchResult[1]) {
@@ -321,6 +326,7 @@ GitStatus.prototype.upstream = { remote: "", branch: "" };
 GitStatus.prototype.aheadCount = 0;
 GitStatus.prototype.behindCount = 0;
 GitStatus.prototype.changes = [new TrackedGitChange()];
+GitStatus.prototype.ignoredChanges = [new TrackedGitChange()];
 GitStatus.gsRe = /^#\s+branch.(oid|head|upstream|ab)(([^\/]+)\/(\S.*)|(\d+)\s+\-(\d+)|.+)/;
 
 var loadPackageResult = parseFile(Path.join(__dirname, "package.json"), function(filePath) {
