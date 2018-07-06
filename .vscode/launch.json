@@ -5,9 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Deploy pages",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "deploy"
+            ]
+        },
+        {
             "type": "PowerShell",
             "request": "launch",
-            "name": "Publish Pages",
+            "name": "Deploy Pages (old)",
             "script": "${workspaceFolder}/publish.ps1",
             "args": [],
             "cwd": "${workspaceFolder}"

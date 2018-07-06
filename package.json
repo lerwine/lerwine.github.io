@@ -24,6 +24,7 @@
     "angular": "^1.7.2",
     "bootstrap": "^4.1.1",
     "bootstrap-table": "^1.12.1",
+    "del": "^3.0.0",
     "gulp-inject-string": "^1.1.1",
     "jquery": "^3.3.1",
     "popper.js": "^1.14.3",
