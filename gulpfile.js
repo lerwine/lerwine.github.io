@@ -468,8 +468,8 @@ gulp.task('deploy', function(done) {
                                                 path: path,
                                                 cleanupCallback: cleanupCallback
                                             };
-                                            runSequence('remove-temp-folder', done);
-                                            //runSequence(copy-to-temp-folder', 'git-checkout-gh-pages', 'copy-from-temp-folder', 'remove-temp-folder', 'push-gh-pages', 'git-uncheckout', done);
+                                            runSequence('copy-to-temp-folder', 'remove-temp-folder', done);
+                                            //runSequence('copy-to-temp-folder', 'git-checkout-gh-pages', 'copy-from-temp-folder', 'remove-temp-folder', 'push-gh-pages', 'git-uncheckout', done);
                                         });
                                         return;
                                     }
@@ -541,7 +541,15 @@ gulp.task('copy-from-temp-folder', function(done) {
         done();
     } else {
         var writeTempStream = gulp.src(Path.join(deployTaskflowState.tempFolder.path, "**/*"));
-        writeTempStream.on('finish', function() { done(); });
+        writeTempStream.on('finish', function() {
+            try {
+                if (typeof(deployTaskflowState.tempFolder) == "object" && deployTaskflowState.tempFolder !== null && typeof(deployTaskflowState.tempFolder.cleanupCallback) == "function")
+                    try { deployTaskflowState.tempFolder.cleanupCallback(); } catch (e) { }
+                    finally {
+                        deployTaskflowState.tempFolder = undefined;
+                    }
+            } finally { done(); }
+        });
         writeTempStream.pipe(gulp.dest(__dirname)).end();
     }
 });
