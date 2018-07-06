@@ -459,18 +459,7 @@ gulp.task('deploy', function(done) {
                                         return;
                                     } else {
                                         deployTaskflowState.failed = false;
-                                        tmp.dir(function(err, path, cleanupCallback) {
-                                            if (err) {
-                                                console.error(err);
-                                                done();
-                                            }
-                                            deployTaskflowState.tempFolder = {
-                                                path: path,
-                                                cleanupCallback: cleanupCallback
-                                            };
-                                            runSequence('copy-to-temp-folder', 'remove-temp-folder', done);
-                                            //runSequence('copy-to-temp-folder', 'git-checkout-gh-pages', 'copy-from-temp-folder', 'remove-temp-folder', 'push-gh-pages', 'git-uncheckout', done);
-                                        });
+                                        runSequence('copy-to-temp-folder', 'remove-temp-folder', done);
                                         return;
                                     }
                                     done();
@@ -500,14 +489,22 @@ gulp.task('remove-temp-folder', function(done) {
 });
 
 gulp.task('copy-to-temp-folder', function(done) {
-    if (typeof(deployTaskflowState.tempFolder) != "object" || deployTaskflowState.tempFolder === null || typeof(deployTaskflowState.tempFolder.path) != "string") {
-        console.error("A temp folder must be called in sequence before this task.");
-        done();
-    } else {
-        var writeTempStream = gulp.src(Path.join(loadPackageResult.mainRoot, "**/*"));
-        writeTempStream.on('finish', function() { done(); });
-        writeTempStream.pipe(gulp.dest(deployTaskflowState.tempFolder.path)).end();
-    }
+    tmp.dir(function(err, path, cleanupCallback) {
+        if (err) {
+            console.error(err);
+            done();
+        } else {
+            deployTaskflowState.tempFolder = {
+                path: path,
+                cleanupCallback: cleanupCallback
+            };
+            var writeTempStream = gulp.src(Path.join(loadPackageResult.mainRoot, "**/*"));
+            writeTempStream.on('finish', function() {
+                done();
+            });
+            writeTempStream.pipe(gulp.dest(path)).end();
+        }
+    });
 });
 
 gulp.task('git-checkout-gh-pages', function(done) {
