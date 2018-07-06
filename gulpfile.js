@@ -1,3 +1,5 @@
+var debugGulp = true;
+
 var gulp = require('gulp');
 var WebServer = require('gulp-webserver');
 var Mocha = require('gulp-mocha');
@@ -285,7 +287,7 @@ function GitStatus(s) {
         var type, matchResult, i;
         if (ln.substr(0, 1) != "#") {
             var chg = new TrackedGitChange(ln);
-            if (chg.type != "ignored" && chg.type != "unknown")
+            if (chg.type != "ignored" && chg.type != "unknown" && !(debugGulp && chg.pathName == "gulpfile.js"))
                 return chg;
             this.ignoredChanges.push(chg);
             return;
@@ -489,7 +491,7 @@ gulp.task('copy-to-temp-folder', function(done) {
                 path: path,
                 cleanupCallback: cleanupCallback
             };
-            return gulp.src(Path.join(loadPackageResult.mainRoot, "**/*")).pipe(gulp.dest(path)).end();
+            return gulp.src(Path.join(loadPackageResult.mainRoot, "**/*")).pipe(gulp.dest(path));
         }
     });
 });
