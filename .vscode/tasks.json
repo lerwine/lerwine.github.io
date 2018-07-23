@@ -4,14 +4,14 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "identifier": "build-dist",
+            "identifier": "build-all-dist",
             "label": "Build Distributable",
             "type": "gulp",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "task": "build-dist",
+            "task": "build-all-dist",
             "problemMatcher": [
                 "$tsc"
             ],
@@ -23,11 +23,122 @@
             }
         },
         {
-            "identifier": "rebuild-dist",
+            "identifier": "rebuild-all-dist",
             "label": "Rebuild Distributable",
             "type": "gulp",
             "group": "build",
-            "task": "rebuild-dist",
+            "task": "rebuild-all-dist",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "build-all-test",
+            "label": "Build Test",
+            "type": "gulp",
+            "group": "build",
+            "task": "build-all-test",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "rebuild-all-test",
+            "label": "Rebuild Test",
+            "type": "gulp",
+            "group": "build",
+            "task": "rebuild-all-test",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "build-bin",
+            "label": "Build Bin Folder",
+            "type": "typescript",
+            "tsconfig": "bin-src\\tsconfig.json",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "build-script-dist",
+            "label": "Build Script Folder",
+            "type": "gulp",
+            "group": "build",
+            "task": "build-script-dist",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "rebuild-script-dist",
+            "label": "Rebuild Script Folder",
+            "type": "gulp",
+            "group": "build",
+            "task": "rebuild-script-dist",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "build-script-test",
+            "label": "Build Script Test",
+            "type": "gulp",
+            "group": "build",
+            "task": "build-script-test",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
+        },
+        {
+            "identifier": "rebuild-script-test",
+            "label": "Rebuild Script Test",
+            "type": "gulp",
+            "group": "build",
+            "task": "rebuild-script-test",
             "problemMatcher": [
                 "$tsc"
             ],

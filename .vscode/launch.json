@@ -7,11 +7,79 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "Gulp startWebServer",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "startWebServer"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Gulp stopWebServer",
+            "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
+            "args": [
+                "stopWebServer"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha Script Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+                "-d",
+                "--timeout", "999999",
+                "--colors",
+                "--recursive",
+                "-r", "ts-node/register",
+                "--reporter", "spec",
+                "./dist/script/**/test-*.js"
+            ],
+            "cwd": "${workspaceFolder}",
+            "sourceMaps": true,
+            "preLaunchTask": "build-script-test",
+            "internalConsoleOptions": "openOnSessionStart",
+            "protocol": "inspector"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mocha Bin Tests",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "args": [
+                "-u", "tdd",
+                "-d",
+                "--timeout", "999999",
+                "--colors",
+                "--recursive",
+                "-r", "ts-node/register",
+                "--reporter", "spec",
+                "./bin/**/test-*.js"
+            ],
+            "cwd": "${workspaceFolder}",
+            "sourceMaps": true,
+            "preLaunchTask": "build-bin",
+            "internalConsoleOptions": "openOnSessionStart",
+            "protocol": "inspector"
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Deploy pages",
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
-                "deploy"
+                "deploy-gh-pages"
             ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run test JS",
+            "program": "${workspaceFolder}/test.js",
+            "args": [],
+            "preLaunchTask": "build-test-js"
         },
         {
             "type": "PowerShell",

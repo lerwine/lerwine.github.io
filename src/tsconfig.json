@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "target":"es6",
+        "module":"commonjs",
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": ".\\..\\test/script",
+        "strict": true,
+        "declarationMap": true,
+        "importHelpers": true,
+        "isolatedModules": false,
+        "lib": [ "es6", "dom" ]
+    },
+    "include": [
+        ".\\src\\**\\*.ts"
+    ]
+}
