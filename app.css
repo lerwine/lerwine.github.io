@@ -1,0 +1,85 @@
+﻿body {
+    font-family: var(--font-family-sans-serif);
+}
+
+header {
+    background-color: lightsteelblue;
+}
+
+header h1, header h2, header h3, header h4, header h5, header h6 {
+    color: midnightblue;
+    vertical-align: middle;
+}
+
+header h1 {
+    font-size: 24px;
+}
+
+header h2 {
+    font-size: 22px;
+}
+
+header h3 {
+    font-size: 20px;
+}
+
+header h4 {
+    font-size: 18px;
+}
+
+header h5 {
+    font-size: 16px;
+}
+
+header h6 {
+    font-size: 14px;
+}
+
+nav {
+    background-color: royalblue;
+    padding: 0px;
+}
+
+nav ul li a, aside ul.nav li.nav-item a {
+    border: 2px outset midnightblue;
+    color: yellow;
+}
+
+nav ul li a {
+    background-color: midnightblue;
+    margin: 0px 4px 0px 0px;
+}
+
+nav ul li a:hover, aside ul.nav li.nav-item a:hover {
+    color: var(--light);
+}
+
+nav ul li a.active, aside ul.nav li.nav-item a.active {
+    background-color: var(--light);
+    color: midnightblue;
+    font-weight: bold;
+    border: 2px inset lightsteelblue;
+}
+
+aside div.card div.card-header {
+    background-color: var(--dark);
+    color: var(--white);
+}
+
+aside div.card div.card-body {
+    background-color: lightsteelblue;
+}
+
+aside ul.nav {
+    background-color: midnightblue;
+}
+
+section {
+    color: var(--dark);
+    border: 1px solid var(--dark);
+}
+
+footer {
+    background-color: var(--secondary);
+    border: 1px solid var(--secondary);
+}

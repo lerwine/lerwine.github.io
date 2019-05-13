@@ -1,0 +1,27 @@
+{
+  "currentItemClass": [ "active", "nav-link" ],
+  "selectedItemClass": [ "active", "nav-link" ],
+  "otherItemClass": [ "nav-link" ],
+  "items": [
+    {
+      "url": "index.html",
+      "linkTitle": "Home",
+      "pageTitle": "Lenny's Web-based Developer Utilities"
+    },
+    {
+      "url": "RegexTester.html",
+      "linkTitle": "Regex Tester",
+      "pageTitle": "Regular Expression Tester"
+    },
+    {
+      "url": "URIBuilder.html",
+      "linkTitle": "URI Builder",
+      "pageTitle": "URI Builder"
+    },
+    {
+      "url": "ColorBuilder.html",
+      "linkTitle": "Color Builder",
+      "pageTitle": "Color Builder"
+    }
+  ]
+}
