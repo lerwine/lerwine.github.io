@@ -1,8 +1,108 @@
 /// <reference path="Scripts/typings/jquery/jquery.d.ts"/>
 /// <reference path="Scripts/typings/angularjs/angular.d.ts"/>
+/// <reference path="Scripts/typings/angularjs/angular-route.d.ts"/>
 var app;
 (function (app) {
-    app.module = angular.module("mainModule", []);
+    app.mainModule = angular.module("mainModule");
+    function sanitizeNavigationLinks(pages) {
+        if (typeof (pages) === "undefined" || pages === null)
+            return [];
+        if (typeof (pages) !== "object" || !Array.isArray(pages))
+            return [{ href: "#", text: "(invalid configuration data)", disabled: true, links: [], cssClass: ["nav-item", "disabled"], onClick: () => { return false; } }];
+        return pages.filter(notNil).map((item) => {
+            if (typeof (item) !== "object")
+                return { href: "#", text: "(invalid configuration data)", disabled: true, links: [], cssClass: ["nav-item", "disabled"], onClick: () => { return false; } };
+            if (isNilOrWhiteSpace(item.href)) {
+                item.href = "#";
+                item.disabled = true;
+            }
+            if (item.disabled)
+                return { href: item.href, text: item.text, disabled: true, links: sanitizeNavigationLinks(item.links), cssClass: ["nav-item", "disabled"], onClick: () => { return false; } };
+            return { href: item.href, text: item.text, disabled: false, links: sanitizeNavigationLinks(item.links), cssClass: ["nav-item"], onClick: () => { return true; } };
+        });
+    }
+    class applicationConfigurationLoader {
+        then(successCallback, errorCallback, notifyCallback) {
+            return this._get.then(successCallback, errorCallback, notifyCallback);
+        }
+        catch(onRejected) { return this._get.catch(onRejected); }
+        finally(finallyCallback) { return this._get.finally(finallyCallback); }
+        constructor($http) {
+            this._get = $http.get('appConfig.json').then((promiseValue) => {
+                let requestInfo = {
+                    status: promiseValue.status,
+                    headers: promiseValue.headers,
+                    config: promiseValue.config,
+                    statusText: promiseValue.statusText
+                };
+                if (typeof (promiseValue.data) === 'undefined' || promiseValue.data == null)
+                    requestInfo.error = "No data returned.";
+                else if (typeof (promiseValue.data) !== 'object')
+                    requestInfo.error = "Invalid data.";
+                else if (typeof (promiseValue.data.links) != 'object' || promiseValue.data.links === null || !Array.isArray(promiseValue.data.links))
+                    requestInfo.error = "Invalid pages configuration";
+                return {
+                    requestInfo: requestInfo,
+                    links: sanitizeNavigationLinks(promiseValue.data.links)
+                };
+            }, (reason) => { return { requestInfo: { statusText: asString(reason, "Unknown error") }, links: [] }; });
+        }
+    }
+    app.mainModule.service("applicationConfigurationLoader", applicationConfigurationLoader);
+    function hasActiveNavItem(links, pageId) {
+        for (let i = 0; i < this.$scope.links.length; i++) {
+            if (links[i].pageId === this.$scope.currentPageId)
+                return true;
+        }
+        for (let i = 0; i < this.$scope.links.length; i++) {
+            if (hasActiveNavItem(links[i].links, pageId))
+                return true;
+        }
+        return false;
+    }
+    class TopNavController {
+        constructor($scope, loader) {
+            this.$scope = $scope;
+            let controller = this;
+            $scope.initializeTopNav = (pageId, navLoader) => { return controller.initializeTopNav(pageId, navLoader); };
+        }
+        $doCheck() { }
+        initializeTopNav(pageId, navLoader) {
+            navLoader.then((result) => {
+                this.$scope.links = result.links;
+                if (isNilOrWhiteSpace(pageId))
+                    return;
+                for (let i = 0; i < this.$scope.links.length; i++) {
+                    if (this.$scope.links[i].pageId === pageId) {
+                        this.$scope.links[i].cssClass.push("active");
+                        this.$scope.links[i].href = "#";
+                        this.$scope.links[i].onClick = () => { return false; };
+                        return;
+                    }
+                }
+                for (let i = 0; i < this.$scope.links.length; i++) {
+                    if (hasActiveNavItem(this.$scope.links[i].links, pageId)) {
+                        this.$scope.links[i].cssClass.push("active");
+                        return;
+                    }
+                }
+            });
+        }
+    }
+    ;
+    app.mainModule.directive('topNavAndHeader', ['navigationLoader', (navLoader) => {
+            return {
+                restrict: "E",
+                scope: {},
+                controller: ["$scope", "applicationConfigurationLoader"],
+                link: (scope, element, attributes) => {
+                    scope.headerText = attributes.headerText;
+                    navLoader.then((promiseValue) => {
+                        scope.initializeTopNav(attributes.pageName, navLoader);
+                    });
+                }
+            };
+        }]);
     // #region Utility functions
     function isNil(obj) { return typeof (obj) === 'undefined' || obj === null; }
     app.isNil = isNil;
@@ -28,12 +128,196 @@ var app;
         return ((typeof (opt) === "boolean") ? opt : trim === true) ? value.trim() : value;
     }
     app.asNotNil = asNotNil;
-    function asNotEmptyOrUndefined(value, trim) {
+    ;
+    ;
+    ;
+    function hasConvertWhenNull(h) { return (typeof (h.whenNull) !== "undefined"); }
+    app.hasConvertWhenNull = hasConvertWhenNull;
+    function hasConvertWhenUndefined(h) { return (typeof (h.whenUndefined) !== "undefined"); }
+    app.hasConvertWhenUndefined = hasConvertWhenUndefined;
+    function hasConvertWhenNil(h) { return (typeof (h.whenNil) !== "undefined"); }
+    app.hasConvertWhenNil = hasConvertWhenNil;
+    function convertValue(value, arg1, convertFn, whenNil, whenUndefined, convertFailed, whenConverted, whenMatched, getFinal) {
+        let testFn;
+        let whenNull;
+        let nilSpec;
+        if (typeof (arg1) === "function") {
+            testFn = arg1;
+            if (typeof (whenUndefined) !== null)
+                whenNull = whenNil;
+            else
+                nilSpec = whenNil;
+        }
+        else {
+            testFn = arg1.test;
+            convertFn = arg1.convert;
+            if (hasConvertWhenNil(arg1))
+                nilSpec = arg1.whenNil;
+            else {
+                if (hasConvertWhenUndefined(arg1))
+                    whenUndefined = arg1.whenUndefined;
+                if (hasConvertWhenNull(arg1))
+                    whenNull = arg1.whenNull;
+            }
+            if (typeof (arg1.convertFailed) !== "undefined")
+                convertFailed = arg1.convertFailed;
+            if (typeof (arg1.whenConverted) !== "undefined")
+                whenConverted = arg1.whenConverted;
+            if (typeof (arg1.whenMatched) !== "undefined")
+                whenMatched = arg1.whenMatched;
+            if (typeof (arg1.getFinal) !== "undefined")
+                getFinal = arg1.getFinal;
+        }
+        let result = (() => {
+            let convertedValue;
+            if (typeof (nilSpec) !== "undefined") {
+                if (typeof (value) === "undefined" || value === null) {
+                    convertFn = undefined;
+                    convertedValue = (typeof (nilSpec) === "function") ? nilSpec(value) : nilSpec;
+                }
+                else if (testFn(value))
+                    return (typeof (whenMatched) === "function") ? whenMatched(value) : value;
+            }
+            else if (typeof (whenUndefined) !== "undefined") {
+                if (typeof (value) === "undefined") {
+                    convertFn = undefined;
+                    convertedValue = (typeof (whenUndefined) === "function") ? whenUndefined() : whenUndefined;
+                }
+                else if (typeof (whenNull) !== "undefined" && value === null) {
+                    convertFn = undefined;
+                    convertedValue = (typeof (whenNull) === "function") ? whenNull() : whenNull;
+                }
+                else if (testFn(value))
+                    return (typeof (whenMatched) === "function") ? whenMatched(value) : value;
+            }
+            else if (typeof (whenNull) !== "undefined" && (typeof (value) !== "undefined") && value === null) {
+                convertFn = undefined;
+                convertedValue = (typeof (whenNull) === "function") ? whenNull() : whenNull;
+            }
+            else if (testFn(value))
+                return (typeof (whenMatched) === "function") ? whenMatched(value) : value;
+            if (typeof (convertFn) !== "undefined") {
+                if (typeof (convertFailed) !== "undefined")
+                    try {
+                        convertedValue = convertFn(value);
+                    }
+                    catch (e) {
+                        convertedValue = (typeof (convertFailed) === "function") ? convertFailed(value, e) : convertFailed;
+                    }
+                else
+                    convertedValue = convertFn(value);
+            }
+            return (typeof (whenConverted) === "function") ? whenConverted(convertedValue) : convertedValue;
+        })();
+        return (typeof (getFinal) === "function") ? getFinal(result) : result;
+    }
+    app.convertValue = convertValue;
+    function isNilOrString(value) { return (typeof (value) === "string") || (typeof (value) === "undefined") || value === null; }
+    app.isNilOrString = isNilOrString;
+    function isUndefinedOrString(value) { return (typeof (value) === "string") || (typeof (value) === "undefined") || value === null; }
+    app.isUndefinedOrString = isUndefinedOrString;
+    function isNullOrString(value) { return (typeof (value) === "string") || (typeof (value) !== "undefined" && value === null); }
+    app.isNullOrString = isNullOrString;
+    function asStringOrNullOrUndefined(value) {
+        return convertValue(value, isNilOrString, (v) => {
+            if (typeof (v) === "object") {
+                if (Array.isArray(v))
+                    return v.map((e) => {
+                        return convertValue(e, isNilOrString, (u) => {
+                            if (typeof (u) === "object") {
+                                if (Array.isArray(u))
+                                    return u.filter(notNil).join("\n");
+                                try {
+                                    let p = u.valueOf();
+                                    if (typeof (p) === "string")
+                                        return p;
+                                    p = p.toString();
+                                    if (typeof (p) === "string")
+                                        return p;
+                                }
+                                catch ( /* okay to ignore */_a) { /* okay to ignore */ }
+                            }
+                            else if (typeof (u) === "function")
+                                try {
+                                    let z = u.ValueOf();
+                                    if (typeof (z) === "string")
+                                        return z;
+                                    z = z.toString();
+                                    if (typeof (z) === "string")
+                                        return z;
+                                }
+                                catch ( /* okay to ignore */_b) { /* okay to ignore */ }
+                            try {
+                                let m = u.toString();
+                                if (typeof (m) === "string")
+                                    return m;
+                            }
+                            catch ( /* okay to ignore */_c) { /* okay to ignore */ }
+                        });
+                    }).filter(notNil).join("\n");
+                try {
+                    let o = v.valueOf();
+                    if (typeof (o) === "string")
+                        return o;
+                    o = o.toString();
+                    if (typeof (o) === "string")
+                        return o;
+                }
+                catch ( /* okay to ignore */_a) { /* okay to ignore */ }
+            }
+            else if (typeof (v) === "function")
+                try {
+                    let f = v.valueOf();
+                    if (typeof (f) === "string")
+                        return f;
+                    f = f.toString();
+                    if (typeof (f) === "string")
+                        return f;
+                }
+                catch ( /* okay to ignore */_b) { /* okay to ignore */ }
+            try {
+                let s = v.toString();
+                if (typeof (s) === "string")
+                    return s;
+            }
+            catch ( /* okay to ignore */_c) { /* okay to ignore */ }
+        });
+    }
+    app.asStringOrNullOrUndefined = asStringOrNullOrUndefined;
+    function asStringOrNull(value) {
+        value = asStringOrNullOrUndefined(value);
+        return (typeof (value) === "undefined") ? null : value;
+    }
+    app.asStringOrNull = asStringOrNull;
+    function asStringOrUndefined(value) {
+        value = asStringOrNullOrUndefined(value);
+        if (typeof (value) === "undefined" || typeof (value) === "string")
+            return value;
+    }
+    app.asStringOrUndefined = asStringOrUndefined;
+    function asString(value, defaultValue = "") {
+        value = asStringOrNullOrUndefined(value);
+        return (typeof (value) === "string") ? value : defaultValue;
+    }
+    app.asString = asString;
+    function asStringAndNotEmpty(value, defaultValue) {
+        value = asStringOrNullOrUndefined(value);
+        return (typeof (value) != "string" || value.length) ? defaultValue : value;
+    }
+    app.asStringAndNotEmpty = asStringAndNotEmpty;
+    function asStringAndNotWhiteSpace(value, defaultValue, trim = false) {
+        value = asStringOrNullOrUndefined(value);
+        if (typeof (value) == "string" && (((trim) ? (value = value.trim()) : value.trim()).length > 0))
+            return value;
+        return defaultValue;
+    }
+    app.asStringAndNotWhiteSpace = asStringAndNotWhiteSpace;
+    function asUndefinedOrNotEmpty(value, trim) {
         if (typeof (value) !== 'undefined' && value !== null && value.length > 0)
             return (trim === true && typeof (value) === 'string') ? value.trim() : value;
     }
-    app.asNotEmptyOrUndefined = asNotEmptyOrUndefined;
-    function asNotWhitespaceOrUndefined(value, trim) {
+    app.asUndefinedOrNotEmpty = asUndefinedOrNotEmpty;
+    function asUndefinedOrNotWhiteSpace(value, trim) {
         if (typeof (value) === 'string') {
             if (trim === true) {
                 if ((value = value.trim()).length > 0)
@@ -43,8 +327,8 @@ var app;
                 return value;
         }
     }
-    app.asNotWhitespaceOrUndefined = asNotWhitespaceOrUndefined;
-    function asNotEmptyOrNull(value, trim) {
+    app.asUndefinedOrNotWhiteSpace = asUndefinedOrNotWhiteSpace;
+    function asNullOrNotEmpty(value, trim) {
         if (typeof (value) === 'string') {
             if (trim) {
                 if ((value = value.trim()).length > 0)
@@ -55,8 +339,8 @@ var app;
         }
         return null;
     }
-    app.asNotEmptyOrNull = asNotEmptyOrNull;
-    function asNotWhitespaceOrNull(value, trim) {
+    app.asNullOrNotEmpty = asNullOrNotEmpty;
+    function asNullOrNotWhiteSpace(value, trim) {
         if (typeof (value) === 'string') {
             if (trim === true) {
                 if ((value = value.trim()).length > 0)
@@ -67,11 +351,48 @@ var app;
         }
         return null;
     }
-    app.asNotWhitespaceOrNull = asNotWhitespaceOrNull;
+    app.asNullOrNotWhiteSpace = asNullOrNotWhiteSpace;
+    function isNumber(value) { return typeof (value) === 'number' && !isNaN(value); }
+    app.isNumber = isNumber;
     function isFiniteNumber(value) { return typeof (value) === 'number' && !isNaN(value) && Number.isFinite(value); }
     app.isFiniteNumber = isFiniteNumber;
     function isFiniteWholeNumber(value) { return typeof (value) === 'number' && !isNaN(value) && Number.isFinite(value) && Math.round(value) === value; }
     app.isFiniteWholeNumber = isFiniteWholeNumber;
+    app.floatingPointNumberRe = /^[+-]?\d+(\.\d+)?$/;
+    function asNumber(value, defaultValue, allowWhiteSpace, allowExtraneousTrailingCharacters) {
+        let dv;
+        if (typeof (defaultValue) === "boolean") {
+            allowExtraneousTrailingCharacters = allowWhiteSpace === true;
+            allowWhiteSpace = defaultValue;
+            dv = null;
+        }
+        else
+            dv = (typeof (dv) === 'number') ? dv : null;
+        return convertValue(value, isNumber, (v) => {
+            if (typeof (v) === "boolean")
+                return (v) ? 1 : 0;
+            if (typeof (v) === "function" && (typeof (v) === "object" && !Array.isArray(v)))
+                try {
+                    let f = v.valueOf();
+                    if (isNumber(f))
+                        return f;
+                    if (typeof (v) === "boolean")
+                        return (v) ? 1 : 0;
+                    if (typeof (f) == "string")
+                        v = f;
+                }
+                catch ( /* okay to ignore */_a) { /* okay to ignore */ }
+            if (typeof (v) !== "string")
+                v = asString(v, "");
+            if (allowWhiteSpace)
+                v = v.trim();
+            let n = parseFloat(v);
+            if (typeof (n) === 'number' && !isNaN(n) && (allowExtraneousTrailingCharacters || app.floatingPointNumberRe.test(v)))
+                return n;
+            return dv;
+        }, (v) => { return dv; });
+    }
+    app.asNumber = asNumber;
     function map(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -552,77 +873,6 @@ var app;
         else
             state.result.push(makeHtmlValue(JSON.stringify(value), state.cssClass.primitiveValue));
     }
-    class TopNavController {
-        constructor($scope, $location, $http) {
-            this.$scope = $scope;
-            this.$location = $location;
-            this.$http = $http;
-            $http.get("./pageNavigation.json").then((nav) => {
-                let pageName = $location.path().split("/").reduce((previousValue, currentValue) => { return (currentValue.length > 0) ? currentValue : previousValue; }, "").toLowerCase();
-                if (isNil(nav.data))
-                    alert("Failed to load navigation from ./pageNavigation.json. Reason (" + nav.status + "): " + nav.statusText);
-                else if (typeof (nav.data.items) === 'undefined')
-                    alert("Failed to load navigation from ./pageNavigation.json. Reason: No items returned. Status: (" + nav.status + "): " + nav.statusText);
-                else {
-                    let selectedItem;
-                    $scope.items = nav.data.items.map((d) => {
-                        let result = this.createNavigationItem(nav.data, $scope, pageName, d);
-                        if (!isNil(result.selectedItem) && isNil(selectedItem))
-                            selectedItem = result.selectedItem;
-                        return result.item;
-                    });
-                    $scope.pageTitle = ((isNil(selectedItem)) ? $scope.items[0] : selectedItem).pageTitle;
-                }
-            }).catch((reason) => {
-                if (!isNil(reason)) {
-                    if (typeof (reason) !== 'string') {
-                        try {
-                            alert("Failed to load navigation from ./pageNavigation.json. Reason: " + JSON.stringify(reason) + ".");
-                        }
-                        catch (_a) {
-                            alert("Failed to load navigation from ./pageNavigation.json. Reason: " + reason + ".");
-                        }
-                    }
-                    else if ((reason = reason.trim()).length > 0)
-                        alert("Failed to load navigation from ./pageNavigation.json. Reason: " + reason);
-                }
-                alert("Failed to load navigation from ./pageNavigation.json. Reason: unknown.");
-            });
-        }
-        createNavigationItem(data, $scope, pageName, definition) {
-            let item = ($scope.$new());
-            item.linkTitle = definition.linkTitle;
-            item.pageTitle = (isNilOrWhiteSpace(definition.pageTitle)) ? item.linkTitle : definition.pageTitle;
-            let selectedItem;
-            if (definition.url.toLowerCase() === pageName) {
-                selectedItem = item;
-                item.href = "#";
-                item.class = data.selectedItemClass;
-                item.isCurrent = true;
-                item.onClick = function () { return false; };
-            }
-            else {
-                item.href = definition.url;
-                item.class = data.otherItemClass;
-                item.isCurrent = false;
-                item.onClick = function () { return true; };
-            }
-            if (notNilOrEmpty(definition.items)) {
-                item.items = definition.items.map((d) => {
-                    let result = this.createNavigationItem(data, item, pageName, d);
-                    if (!isNil(result.selectedItem) && isNil(result.selectedItem)) {
-                        selectedItem = result.item;
-                        item.class = data.currentItemClass;
-                        item.isCurrent = true;
-                    }
-                    return result.item;
-                });
-            }
-            return { item: item, selectedItem: selectedItem };
-        }
-        $doCheck() { }
-    }
-    app.module.controller("TopNavController", ["$scope", "$location", "$http", TopNavController]);
     // #endregion
 })(app || (app = {}));
 //# sourceMappingURL=app.js.map

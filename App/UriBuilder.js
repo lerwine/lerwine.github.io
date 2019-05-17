@@ -1312,6 +1312,6 @@ var uriBuilder;
         toString() { return this.href; }
         toJSON() { return JSON.stringify(this.href); }
     }
-    app.module.controller("UriBuilderController", ['$scope', UriBuilderController]);
+    app.mainModule.controller("UriBuilderController", ['$scope', UriBuilderController]);
 })(uriBuilder || (uriBuilder = {}));
-//# sourceMappingURL=UriBuilderController.js.map
+//# sourceMappingURL=UriBuilder.js.map

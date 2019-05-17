@@ -53,7 +53,7 @@ var regexTester;
         remove(key) { localStorage.removeItem(key); }
         clear() { localStorage.clear(); }
     }
-    app.module.factory("LocalRegexStorageService", LocalRegexStorageService);
+    app.mainModule.factory("LocalRegexStorageService", LocalRegexStorageService);
     class RegexTesterController {
         constructor($scope, storageSvc) {
             this.$scope = $scope;
@@ -295,6 +295,7 @@ var regexTester;
         }
     }
     RegexTesterController.whitespacRe = /\s+/g;
-    app.module.controller("RegexTesterController", ["$scope", "LocalRegexStorageService", RegexTesterController]);
+    regexTester.RegexTesterController = RegexTesterController;
+    app.mainModule.controller("RegexTesterController", ["$scope", "LocalRegexStorageService", RegexTesterController]);
 })(regexTester || (regexTester = {}));
-//# sourceMappingURL=RegexTesterController.js.map
+//# sourceMappingURL=RegexTester.js.map

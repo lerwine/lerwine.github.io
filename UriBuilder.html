@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
-<html lang="en" xmlns:ng="http://angularjs.org" ng-app="mainModule" ng-controller="TopNavController">
+<!DOCTYPE html>
+<html lang="en" xmlns:ng="http://angularjs.org" ng-app="mainModule">
 <head>
     <meta name="viewport" content="width=1024, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta charset="utf-8" />
-    <title>{{ pageTitle }}</title>
+    <title>URI Builder</title>
     <link rel="stylesheet" href="lib/twitter-bootstrap/css/bootstrap.css" type="text/css" />
     <link rel="stylesheet" href="lib/angular.js/angular-csp.css" type="text/css" />
     <link rel="stylesheet" href="app.css" type="text/css" />
@@ -13,15 +13,10 @@
     <script src="lib/angular.js/angular.js"></script>
     <script src="common.js"></script>
     <script src="app.js"></script>
-    <script src="RegexTesterController.js"></script>
+    <script src="UriBuilder.js"></script>
 </head>
 <body>
-    <header class="container-fluid p-1"><h1>{{ pageTitle }}</h1></header>
-    <nav class="container-fluid navbar navbar-expand-sm p-1">
-        <ul class="navbar-nav">
-            <li class="nav-item" ng-repeat="i in items"><a ng-href="{{i.href}}" ng-class="i.class" ng-click="return i.onClick()">{{ i.linkTitle }}</a></li>
-        </ul>
-    </nav>
+    <top-nav-and-header headerText="URI Builder" pageId="uriBuilder"></top-nav-and-header>
     <section class="container-fluid" ng-controller="UriBuilderController">
         <form action="UriBuilder.html" method="get"></form>
     </section>

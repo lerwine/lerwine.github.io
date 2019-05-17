@@ -1,0 +1,24 @@
+{
+  "links": [
+    {
+      "href": "index.html",
+      "text": "Home",
+      "pageId": "home"
+    },
+    {
+      "href": "RegexTester.html",
+      "text": "Regex Tester",
+      "pageId": "regexTester"
+    },
+    {
+      "href": "URIBuilder.html",
+      "text": "URI Builder",
+      "pageId": "uriBuilder"
+    },
+    {
+      "href": "ColorBuilder.html",
+      "text": "Color Builder",
+      "pageId": "colorBuilder"
+    }
+  ]
+}

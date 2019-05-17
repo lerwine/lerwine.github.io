@@ -10,6 +10,6 @@ var colorBuilder;
         $doCheck() {
         }
     }
-    app.module.controller("ColorBuilderController", ["$scope", ColorBuilderController]);
+    app.mainModule.controller("ColorBuilderController", ["$scope", ColorBuilderController]);
 })(colorBuilder || (colorBuilder = {}));
-//# sourceMappingURL=ColorBuilderController.js.map
+//# sourceMappingURL=ColorBuilder.js.map
