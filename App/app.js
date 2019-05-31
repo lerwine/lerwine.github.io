@@ -3,7 +3,18 @@
 /// <reference path="Scripts/typings/angularjs/angular-route.d.ts"/>
 var app;
 (function (app) {
-    app.mainModule = angular.module("mainModule");
+    /**
+    * The main module for this app.
+    *
+    * @type {ng.IModule}
+    */
+    app.mainModule = angular.module("mainModule", []);
+    /**
+     *
+     *
+     * @param {INavigationLinkConfig[]} [pages]
+     * @returns {INavigationLink[]}
+     */
     function sanitizeNavigationLinks(pages) {
         if (typeof (pages) === "undefined" || pages === null)
             return [];
@@ -21,12 +32,84 @@ var app;
             return { href: item.href, text: item.text, disabled: false, links: sanitizeNavigationLinks(item.links), cssClass: ["nav-item"], onClick: () => { return true; } };
         });
     }
-    class applicationConfigurationLoader {
+    class applicationConfigurationLoaderService {
+        constructor($http, $q) {
+            this.$http = $http;
+            this.$q = $q;
+            this._response = $http.get('appConfig.json').then((httpResult) => {
+                return $q((resolve, reject) => {
+                    if (typeof (httpResult.data) !== "object" || httpResult.data === null || typeof (httpResult.data.links) !== "object" || httpResult.data.links == null || !Array.isArray(httpResult.data.links))
+                        reject("Invalid response");
+                    else
+                        resolve({
+                            links: sanitizeNavigationLinks(httpResult.data.links),
+                            status: httpResult.status,
+                            statusText: httpResult.statusText
+                        });
+                });
+            }, (errorReason) => {
+                if (typeof (errorReason) === "undefined" || errorReason === "null")
+                    return new Error("Unexpected failure");
+                if (typeof errorReason === "string")
+                    return new Error(errorReason);
+                if (errorReason instanceof Error)
+                    return errorReason;
+                let message = ((typeof errorReason.message === "string") ? errorReason.message :
+                    ((typeof errorReason.message !== "undefined" && errorReason.message !== null) ? errorReason.message : "")).trim();
+                return {
+                    message: (message.length == 0) ? "Unexpected Error" : message,
+                    data: errorReason,
+                };
+            });
+        }
+        then(successCallback, errorCallback) {
+            return this._response.then(successCallback, errorCallback);
+        }
+    }
+    app.mainModule.service("applicationConfigurationLoader", ["$http", "$q", applicationConfigurationLoaderService]);
+    // #endregion
+    /**
+     * Loads application configuration from file.
+     *
+     * @class applicationConfigurationLoader
+     * @implements {ng.IPromise<IAppConfigLoadResult>}
+     */
+    class applicationConfigurationLoaderOld {
+        /**
+         *
+         *
+         * @template TResult
+         * @param {((promiseValue: IAppConfigLoadResult) => TResult | ng.IPromise<TResult>)} successCallback
+         * @param {(reason: any) => any} [errorCallback]
+         * @param {(state: any) => any} [notifyCallback]
+         * @returns {ng.IPromise<TResult>}
+         * @memberof applicationConfigurationLoader
+         */
         then(successCallback, errorCallback, notifyCallback) {
             return this._get.then(successCallback, errorCallback, notifyCallback);
         }
+        /**
+         *
+         *
+         * @template TResult
+         * @param {((reason: any) => TResult | ng.IPromise<TResult>)} onRejected
+         * @returns {ng.IPromise<TResult>}
+         * @memberof applicationConfigurationLoader
+         */
         catch(onRejected) { return this._get.catch(onRejected); }
+        /**
+         *
+         *
+         * @param {() => any} finallyCallback
+         * @returns {ng.IPromise<IAppConfigLoadResult>}
+         * @memberof applicationConfigurationLoader
+         */
         finally(finallyCallback) { return this._get.finally(finallyCallback); }
+        /**
+         *Creates an instance of applicationConfigurationLoader.
+         * @param {ng.IHttpService} $http
+         * @memberof applicationConfigurationLoader
+         */
         constructor($http) {
             this._get = $http.get('appConfig.json').then((promiseValue) => {
                 let requestInfo = {
@@ -48,7 +131,13 @@ var app;
             }, (reason) => { return { requestInfo: { statusText: asString(reason, "Unknown error") }, links: [] }; });
         }
     }
-    app.mainModule.service("applicationConfigurationLoader", applicationConfigurationLoader);
+    /**
+     *
+     *
+     * @param {INavigationLink[]} links
+     * @param {string} pageId
+     * @returns
+     */
     function hasActiveNavItem(links, pageId) {
         for (let i = 0; i < this.$scope.links.length; i++) {
             if (links[i].pageId === this.$scope.currentPageId)
@@ -60,15 +149,33 @@ var app;
         }
         return false;
     }
+    /**
+     *
+     *
+     * @class TopNavController
+     * @implements {ng.IController}
+     */
     class TopNavController {
-        constructor($scope, loader) {
+        /**
+         *Creates an instance of TopNavController.
+         * @param {ITopNavScope} $scope
+         * @memberof TopNavController
+         */
+        constructor($scope) {
             this.$scope = $scope;
             let controller = this;
-            $scope.initializeTopNav = (pageId, navLoader) => { return controller.initializeTopNav(pageId, navLoader); };
+            $scope.initializeTopNav = (pageId, loader) => { return controller.initializeTopNav(pageId, loader); };
         }
         $doCheck() { }
-        initializeTopNav(pageId, navLoader) {
-            navLoader.then((result) => {
+        /**
+         *
+         *
+         * @param {string} pageId
+         * @param {applicationConfigurationLoader} loader
+         * @memberof TopNavController
+         */
+        initializeTopNav(pageId, loader) {
+            loader.then((result) => {
                 this.$scope.links = result.links;
                 if (isNilOrWhiteSpace(pageId))
                     return;
@@ -90,12 +197,12 @@ var app;
         }
     }
     ;
-    app.mainModule.directive('topNavAndHeader', ['navigationLoader', (navLoader) => {
+    app.mainModule.directive('topNavAndHeader', ['applicationConfigurationLoader', (navLoader) => {
             return {
                 restrict: "E",
                 scope: {},
-                controller: ["$scope", "applicationConfigurationLoader"],
-                link: (scope, element, attributes) => {
+                controller: ["$scope", TopNavController],
+                link: (scope, element, attributes, controller) => {
                     scope.headerText = attributes.headerText;
                     navLoader.then((promiseValue) => {
                         scope.initializeTopNav(attributes.pageName, navLoader);
@@ -104,6 +211,13 @@ var app;
             };
         }]);
     // #region Utility functions
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} obj
+     * @returns {(obj is null | undefined)}
+     */
     function isNil(obj) { return typeof (obj) === 'undefined' || obj === null; }
     app.isNil = isNil;
     function notNil(obj) { return typeof (obj) !== 'undefined' && obj != null; }
@@ -116,8 +230,22 @@ var app;
         return (typeof (value) !== 'string' && (typeof (value) != 'object' || value === null || !Array.isArray(value))) || value.length == 0;
     }
     app.isNilOrEmpty = isNilOrEmpty;
+    /**
+     *
+     *
+     * @export
+     * @param {(string | null | undefined)} value
+     * @returns {boolean}
+     */
     function isNilOrWhiteSpace(value) { return typeof (value) !== 'string' || value.trim().length == 0; }
     app.isNilOrWhiteSpace = isNilOrWhiteSpace;
+    /**
+     *
+     *
+     * @export
+     * @param {(string | null | undefined)} value
+     * @returns {value is string}
+     */
     function notNilOrWhiteSpace(value) { return typeof (value) == 'string' && value.trim().length > 0; }
     app.notNilOrWhiteSpace = notNilOrWhiteSpace;
     function asNotNil(value, opt, trim) {
@@ -131,10 +259,34 @@ var app;
     ;
     ;
     ;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {ConvertValueHandlers<T>} h
+     * @returns {h is ConvertValueAndOrNullHandlers<T>}
+     */
     function hasConvertWhenNull(h) { return (typeof (h.whenNull) !== "undefined"); }
     app.hasConvertWhenNull = hasConvertWhenNull;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {ConvertValueHandlers<T>} h
+     * @returns {h is ConvertValueAndOrUndefinedHandlers<T>}
+     */
     function hasConvertWhenUndefined(h) { return (typeof (h.whenUndefined) !== "undefined"); }
     app.hasConvertWhenUndefined = hasConvertWhenUndefined;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {ConvertValueHandlers<T>} h
+     * @returns {h is IConvertValueOrNilHandlers<T>}
+     */
     function hasConvertWhenNil(h) { return (typeof (h.whenNil) !== "undefined"); }
     app.hasConvertWhenNil = hasConvertWhenNil;
     function convertValue(value, arg1, convertFn, whenNil, whenUndefined, convertFailed, whenConverted, whenMatched, getFinal) {
@@ -212,12 +364,40 @@ var app;
         return (typeof (getFinal) === "function") ? getFinal(result) : result;
     }
     app.convertValue = convertValue;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(value is string | null | undefined)}
+     */
     function isNilOrString(value) { return (typeof (value) === "string") || (typeof (value) === "undefined") || value === null; }
     app.isNilOrString = isNilOrString;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(value is string | undefined)}
+     */
     function isUndefinedOrString(value) { return (typeof (value) === "string") || (typeof (value) === "undefined") || value === null; }
     app.isUndefinedOrString = isUndefinedOrString;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(value is string | null)}
+     */
     function isNullOrString(value) { return (typeof (value) === "string") || (typeof (value) !== "undefined" && value === null); }
     app.isNullOrString = isNullOrString;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(string | null | undefined)}
+     */
     function asStringOrNullOrUndefined(value) {
         return convertValue(value, isNilOrString, (v) => {
             if (typeof (v) === "object") {
@@ -284,27 +464,66 @@ var app;
         });
     }
     app.asStringOrNullOrUndefined = asStringOrNullOrUndefined;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(string | null)}
+     */
     function asStringOrNull(value) {
         value = asStringOrNullOrUndefined(value);
         return (typeof (value) === "undefined") ? null : value;
     }
     app.asStringOrNull = asStringOrNull;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {(string | undefined)}
+     */
     function asStringOrUndefined(value) {
         value = asStringOrNullOrUndefined(value);
         if (typeof (value) === "undefined" || typeof (value) === "string")
             return value;
     }
     app.asStringOrUndefined = asStringOrUndefined;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @param {string} [defaultValue=""]
+     * @returns {string}
+     */
     function asString(value, defaultValue = "") {
         value = asStringOrNullOrUndefined(value);
         return (typeof (value) === "string") ? value : defaultValue;
     }
     app.asString = asString;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @param {string} defaultValue
+     * @returns {string}
+     */
     function asStringAndNotEmpty(value, defaultValue) {
         value = asStringOrNullOrUndefined(value);
         return (typeof (value) != "string" || value.length) ? defaultValue : value;
     }
     app.asStringAndNotEmpty = asStringAndNotEmpty;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @param {string} defaultValue
+     * @param {boolean} [trim=false]
+     * @returns {string}
+     */
     function asStringAndNotWhiteSpace(value, defaultValue, trim = false) {
         value = asStringOrNullOrUndefined(value);
         if (typeof (value) == "string" && (((trim) ? (value = value.trim()) : value.trim()).length > 0))
@@ -317,6 +536,14 @@ var app;
             return (trim === true && typeof (value) === 'string') ? value.trim() : value;
     }
     app.asUndefinedOrNotEmpty = asUndefinedOrNotEmpty;
+    /**
+     *
+     *
+     * @export
+     * @param {(string | null | undefined)} value
+     * @param {boolean} [trim]
+     * @returns {(string | undefined)}
+     */
     function asUndefinedOrNotWhiteSpace(value, trim) {
         if (typeof (value) === 'string') {
             if (trim === true) {
@@ -340,6 +567,14 @@ var app;
         return null;
     }
     app.asNullOrNotEmpty = asNullOrNotEmpty;
+    /**
+     *
+     *
+     * @export
+     * @param {(string | null | undefined)} value
+     * @param {boolean} [trim]
+     * @returns {(string | null)}
+     */
     function asNullOrNotWhiteSpace(value, trim) {
         if (typeof (value) === 'string') {
             if (trim === true) {
@@ -352,10 +587,31 @@ var app;
         return null;
     }
     app.asNullOrNotWhiteSpace = asNullOrNotWhiteSpace;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {value is number}
+     */
     function isNumber(value) { return typeof (value) === 'number' && !isNaN(value); }
     app.isNumber = isNumber;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {value is number}
+     */
     function isFiniteNumber(value) { return typeof (value) === 'number' && !isNaN(value) && Number.isFinite(value); }
     app.isFiniteNumber = isFiniteNumber;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @returns {value is number}
+     */
     function isFiniteWholeNumber(value) { return typeof (value) === 'number' && !isNaN(value) && Number.isFinite(value) && Math.round(value) === value; }
     app.isFiniteWholeNumber = isFiniteWholeNumber;
     app.floatingPointNumberRe = /^[+-]?\d+(\.\d+)?$/;
@@ -393,6 +649,17 @@ var app;
         }, (v) => { return dv; });
     }
     app.asNumber = asNumber;
+    /**
+     *
+     *
+     * @export
+     * @template TSource
+     * @template TResult
+     * @param {Iterable<TSource>} source
+     * @param {(value: TSource, index: number, iterable: Iterable<TSource>) => TResult} callbackfn
+     * @param {*} [thisArg]
+     * @returns {TResult[]}
+     */
     function map(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -411,6 +678,16 @@ var app;
         return result;
     }
     app.map = map;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {boolean}
+     */
     function every(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -430,6 +707,16 @@ var app;
         return true;
     }
     app.every = every;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {boolean}
+     */
     function some(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -449,6 +736,15 @@ var app;
         return true;
     }
     app.some = some;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => void} callbackfn
+     * @param {*} [thisArg]
+     */
     function forEach(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -465,6 +761,16 @@ var app;
             }
     }
     app.forEach = forEach;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {T[]}
+     */
     function filter(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -485,6 +791,17 @@ var app;
         return result;
     }
     app.filter = filter;
+    /**
+     *
+     *
+     * @export
+     * @template TSource
+     * @template TResult
+     * @param {Iterable<TSource>} source
+     * @param {(previousValue: TResult, currentValue: TSource, currentIndex: number, iterable: Iterable<TSource>) => TResult} callbackfn
+     * @param {TResult} initialValue
+     * @returns {TResult}
+     */
     function reduce(source, callbackfn, initialValue) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -497,6 +814,16 @@ var app;
         return result;
     }
     app.reduce = reduce;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {(T | undefined)}
+     */
     function first(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -515,6 +842,16 @@ var app;
             }
     }
     app.first = first;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {number}
+     */
     function indexOf(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -533,6 +870,16 @@ var app;
             }
     }
     app.indexOf = indexOf;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {(T | undefined)}
+     */
     function last(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -553,6 +900,15 @@ var app;
         return result;
     }
     app.last = last;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {number} count
+     * @returns {T[]}
+     */
     function takeFirst(source, count) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -568,6 +924,16 @@ var app;
         return result;
     }
     app.takeFirst = takeFirst;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {T[]}
+     */
     function takeWhile(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -590,6 +956,15 @@ var app;
         return result;
     }
     app.takeWhile = takeWhile;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {Number} count
+     * @returns {T[]}
+     */
     function skipFirst(source, count) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -609,6 +984,16 @@ var app;
         return result;
     }
     app.skipFirst = skipFirst;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {*} [thisArg]
+     * @returns {T[]}
+     */
     function skipWhile(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
@@ -639,6 +1024,16 @@ var app;
         return result;
     }
     app.skipWhile = skipWhile;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {(x: T, y: T) => boolean} [callbackfn]
+     * @param {*} [thisArg]
+     * @returns {T[]}
+     */
     function unique(source, callbackfn, thisArg) {
         if (typeof (callbackfn) !== 'function')
             callbackfn = function (x, y) { return x === y; };
@@ -665,6 +1060,15 @@ var app;
         return result;
     }
     app.unique = unique;
+    /**
+     *
+     *
+     * @export
+     * @template T
+     * @param {Iterable<T>} source
+     * @param {string} [separator]
+     * @returns {string}
+     */
     function join(source, separator) {
         if (Array.isArray(source))
             return source.join(separator);
@@ -679,8 +1083,21 @@ var app;
         return result.join(separator);
     }
     app.join = join;
+    /**
+     *
+     *
+     * @param {(any | null | undefined)} obj
+     * @returns {obj is Iterable<any>}
+     */
     function isIterable(obj) { return typeof (obj) !== 'undefined' && typeof (obj[Symbol.iterator]) === 'function'; }
-    ;
+    /**
+     *
+     *
+     * @export
+     * @param {(any | null | undefined)} value
+     * @param {ItoDebugHtmlOptions} [options]
+     * @returns {string}
+     */
     function toDebugHTML(value, options) {
         let state;
         if (typeof (options) === 'undefined')
@@ -698,6 +1115,13 @@ var app;
         return state.result.join("\n");
     }
     app.toDebugHTML = toDebugHTML;
+    /**
+     *
+     *
+     * @param {('div' | 'span' | 'ul' | 'ol' | 'dl' | 'li' | 'dd' | 'dt')} tagName
+     * @param {(...(string | undefined)[])} className
+     * @returns {string}
+     */
     function makeOpenTag(tagName, ...className) {
         if (typeof (className) === 'object' && className !== null && (className = unique(className.filter(notNilOrWhiteSpace).map((s) => s.trim()))).length > 0)
             return "<" + tagName + " class=\"" + className.join(" ") + "\">";
@@ -873,6 +1297,57 @@ var app;
         else
             state.result.push(makeHtmlValue(JSON.stringify(value), state.cssClass.primitiveValue));
     }
+    /**
+     *
+     *
+     * @param {*} value
+     * @returns {ErrorResult}
+     */
+    function asErrorResult(value) {
+        if (typeof (value) !== "undefined" && value !== null) {
+            let message;
+            if (typeof (value) === "string")
+                return ((message = value.trim()).length == 0) ? "Unexpected error" : message;
+            if (value instanceof Error)
+                return value;
+            if (typeof (value) === "object" && ((typeof value.message !== "undefined") && value.message !== null)) {
+                if (typeof value.data !== "undefined" && value.data !== null)
+                    return value;
+                if ((message = ((typeof value.message === "string") ? value.message : "" + value.message).trim()).length == 0)
+                    message = ("" + value).trim();
+            }
+            else
+                message = ("" + value).trim();
+            return {
+                message: (message.length == 0) ? "Unexpected Error" : message,
+                data: value
+            };
+        }
+    }
+    app.asErrorResult = asErrorResult;
+    function chainCallback(currentCallback, newCallback, thisArg) {
+        if (typeof (currentCallback) !== "function")
+            return newCallback;
+        return function (...args) {
+            try {
+                currentCallback.apply(thisArg, args);
+            }
+            finally {
+                newCallback.apply(thisArg, args);
+            }
+        };
+    }
+    app.chainCallback = chainCallback;
+    function callIfFunction(thisArg, callbackfn, ...args) {
+        if (typeof callbackfn === "function")
+            return callbackfn.apply(thisArg, args);
+    }
+    app.callIfFunction = callIfFunction;
+    function execIfFunction(callbackfn, ...args) {
+        if (typeof callbackfn === "function")
+            return callbackfn.apply(this, args);
+    }
+    app.execIfFunction = execIfFunction;
     // #endregion
 })(app || (app = {}));
 //# sourceMappingURL=app.js.map

@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:ng="http://angularjs.org" ng-app="mainModule">
+<html lang="en" xmlns:ng="http://angularjs.org">
 <head>
     <meta name="viewport" content="width=1024, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta charset="utf-8" />
-    <base href="/">
     <title>Lenny's Pages</title>
     <link rel="stylesheet" href="lib/twitter-bootstrap/css/bootstrap.css" type="text/css" />
     <link rel="stylesheet" href="lib/angular.js/angular-csp.css" type="text/css" />
@@ -13,9 +12,9 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
     <script src="lib/angular.js/angular.js"></script>
-    <script src="app.js"></script>
+    <script src="App/app.js"></script>
 </head>
-<body>
+<body ng-app="mainModule">
     <top-nav-and-header headerText="Lenny's Pages" pageId="home"></top-nav-and-header>
     <section class="container-fluid">
         <div class="card">

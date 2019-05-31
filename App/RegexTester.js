@@ -3,299 +3,432 @@
 /// <reference path="app.ts"/>
 var regexTester;
 (function (regexTester) {
-    // #region LocalStorageService
-    class LocalRegexStorageService {
-        keys() {
-            let result = [];
-            for (let i = 0; i < localStorage.length; i++)
-                result.push(localStorage.key(i));
-            return result;
-        }
-        length() { return localStorage.length; }
-        load(key, scope) {
-            try {
-                let json = localStorage.getItem(key);
-                if (!app.isNilOrWhiteSpace(json)) {
-                    let data = (JSON.parse(json));
-                    scope.inputPattern = data.pattern;
-                    let i = data.inputText.length;
-                    while (scope.inputItems.length < i)
-                        scope.addInputItem();
-                    i--;
-                    while (scope.inputItems.length > i)
-                        scope.inputItems[i].delete();
-                    do {
-                        scope.inputItems[i].inputText = data.inputText[i--];
-                    } while (i > -1);
-                    scope.inputItems.forEach((i) => {
-                        i.evaluated = i.success = false;
-                        i.cssClass = ['alert', 'alert-secondary'];
-                    });
-                    scope.showEvaluations = false;
-                }
-            }
-            catch (_a) { }
-            return false;
-        }
-        save(key, scope) {
-            localStorage.setItem(key, JSON.stringify({
-                pattern: scope.inputPattern,
-                inputText: scope.inputItems.map((i) => i.inputText),
-                isGlobal: scope.isGlobal,
-                ignoreCase: scope.ignoreCase,
-                multiline: scope.multiline,
-                unicode: scope.unicode,
-                sticky: scope.sticky,
-                dotAll: scope.dotAll,
-                ignoreWhitespace: scope.ignoreWhitespace
-            }));
-        }
-        remove(key) { localStorage.removeItem(key); }
-        clear() { localStorage.clear(); }
-    }
-    app.mainModule.factory("LocalRegexStorageService", LocalRegexStorageService);
+    // #region RegexTester Controller
     class RegexTesterController {
-        constructor($scope, storageSvc) {
+        constructor($scope, regexParser, evaluateExpression) {
             this.$scope = $scope;
-            this.storageSvc = storageSvc;
-            this._inputText = [];
-            this._inputPattern = '';
-            this._isGlobal = false;
-            this._ignoreCase = false;
-            this._multiline = false;
-            this._unicode = false;
-            this._sticky = false;
-            this._dotAll = false;
-            this._ignoreWhitespace = false;
             let controller = this;
-            $scope.inputItems = [];
-            this.addInputItem();
-            $scope.inputPattern = this._inputPattern;
-            $scope.patternParseError = '';
-            $scope.ignoreCase = this._ignoreCase;
-            $scope.isGlobal = this._isGlobal;
-            $scope.multiline = this._multiline;
-            $scope.unicode = this._unicode;
-            $scope.sticky = this._sticky;
-            $scope.dotAll = this._dotAll;
-            $scope.showParseError = false;
-            $scope.flags = '';
-            $scope.index = -1;
-            $scope.evaluate = () => controller.evaluate();
-            $scope.addInputItem = () => controller.addInputItem();
-            $scope.editInput = () => controller.editInput();
-            $scope.editOptions = (value) => controller.editOptions(value);
-            $scope.ignoreWhitespace = this._ignoreWhitespace;
-            $scope.showOptions = $scope.showEvaluations = $scope.hideInputTextBox = false;
-            $scope.savedNames = storageSvc.keys();
-            $scope.currentSavedName = $scope.sessionLoadMessage = $scope.sessionSaveMessage = '';
-            $scope.loadSession = (name) => controller.loadSession(name);
-            $scope.deleteSession = (name) => controller.deleteSession(name);
-            $scope.saveSession = () => controller.saveSession();
-            $scope.setInputRowCount = (inc) => controller.setInputRowCount(inc);
-            $scope.inputRowCount = 3;
-            $scope.validationClass = [];
-            this.evaluate();
+            $scope.evaluationIsDisabled = true;
+            $scope.evaluateExpression = () => { controller.evaluateExpression(); };
+            regexParser.whenPatternParseSucceeded((re) => { $scope.evaluationIsDisabled = false; });
+            regexParser.whenPatternParseFailed((value, reason) => { $scope.isDisabled = true; });
+            regexParser.then((re) => { $scope.evaluationIsDisabled = false; });
         }
-        setInputRowCount(inc) {
-            if (inc) {
-                if (this.$scope.inputRowCount < 25)
-                    this.$scope.inputRowCount++;
-            }
-            else if (this.$scope.inputRowCount > 3)
-                this.$scope.inputRowCount--;
-        }
-        loadSession(name) {
-            this.$scope.sessionLoadMessage = this.$scope.sessionSaveMessage = '';
-            this.storageSvc.load(name, this.$scope);
-            this.$scope.currentSavedName = name;
-            this.$scope.sessionLoadMessage = 'Session "' + name + '" loaded at ' + Date();
-        }
-        deleteSession(name) {
-            this.$scope.sessionLoadMessage = this.$scope.sessionSaveMessage = '';
-            this.storageSvc.remove(name);
-            this.$scope.savedNames = this.storageSvc.keys();
-            this.$scope.sessionLoadMessage = 'Session "' + name + '" deleted.';
-        }
-        saveSession() {
-            this.$scope.sessionLoadMessage = this.$scope.sessionSaveMessage = '';
-            if (app.isNilOrWhiteSpace(this.$scope.currentSavedName))
-                alert("Saved session must have a name.");
-            else {
-                this.storageSvc.save((this.$scope.currentSavedName = this.$scope.currentSavedName.trim()), this.$scope);
-                this.$scope.sessionSaveMessage = 'Session "' + this.$scope.currentSavedName + '" saved at ' + Date();
-            }
-            this.$scope.savedNames = this.storageSvc.keys();
-        }
-        editOptions(value) {
-            this.$scope.sessionLoadMessage = this.$scope.sessionSaveMessage = '';
-            this.$scope.showOptions = value;
-        }
-        editInput() {
-            this.$scope.hideInputTextBox = false;
-        }
-        addInputItem() {
-            let item = (this.$scope.$new());
-            let array = this.$scope.inputItems;
-            item.success = item.evaluated = false;
-            item.inputText = '';
-            item.statusMessage = "Not evaluated";
-            item.cssClass = ['alert', 'alert-secondary'];
-            item.itemNumber = array.length + 1;
-            item.matchIndex = -1;
-            item.matchGroups = [];
-            item.edit = () => {
-                array.forEach((i) => { i.isCurrent = false; });
-                this.$scope.hideInputTextBox = false;
-                item.isCurrent = true;
-            };
-            item.delete = () => {
-                if (array.length < 1)
-                    return;
-                for (let i = item.itemNumber; i < array.length; i++)
-                    array[i].itemNumber--;
-                if (item.itemNumber === 1)
-                    array.shift();
-                else if (item.itemNumber == array.length)
-                    array.pop();
-                else
-                    array.slice(item.itemNumber - 1, 1);
-                if (array.length == 1)
-                    array[0].canDelete = false;
-            };
-            if (array.length < 1)
-                item.canDelete = false;
-            else {
-                item.canDelete = true;
-                if (array.length == 1)
-                    array[0].canDelete = true;
-            }
-            array.forEach((i) => { i.isCurrent = false; });
-            item.isCurrent = true;
-            array.push(item);
-        }
-        evaluate() {
-            this.$doCheck();
-            if (this.$scope.patternParseError.length > 0) {
-                if (this.$scope.showParseError)
-                    alert("Invalid regex pattern");
-                this.$scope.showParseError = true;
-                return;
-            }
-            this.$scope.showEvaluations = this.$scope.hideInputTextBox = true;
-            this.$scope.sessionLoadMessage = this.$scope.sessionSaveMessage = '';
-            this._inputText = this.$scope.inputItems.map((item) => {
-                item.isCurrent = false;
-                if (typeof (item.inputText) !== 'string')
-                    item.inputText = '';
-                try {
-                    let result = this._regex.exec(item.inputText);
-                    item.evaluated = true;
-                    if (app.isNil(result)) {
-                        item.success = false;
-                        item.matchIndex = -1;
-                        item.matchGroups = [];
-                        item.statusMessage = "Match failed.";
-                        item.cssClass = ['alert', 'alert-warning'];
-                    }
-                    else {
-                        item.success = true;
-                        item.statusMessage = "Match succeeded. Matched " + result[0].length + " characters at index " + result.index + ' .';
-                        item.cssClass = ['alert', 'alert-success'];
-                        item.matchIndex = result.index;
-                        item.matchGroups = result.map((value, index) => {
-                            if (app.isNil(value))
-                                return { index: index, success: false, statusMessage: 'Not matched', value: '', cssClass: ['alert', 'alert-secondary'] };
-                            return { index: index, success: true, statusMessage: 'Matched ' + value.length + ' characters', value: value, cssClass: ['alert', 'alert-success'] };
-                        });
-                    }
-                }
-                catch (e) {
-                    item.success = false;
-                    item.statusMessage = "Match error: " + JSON.stringify(e);
-                    item.cssClass = ['alert', 'alert-danger'];
-                }
-                return item.inputText;
-            });
+        evaluateExpression() {
         }
         $doCheck() {
-            if (this.$scope.ignoreWhitespace != this._ignoreWhitespace) {
-                if (this._ignoreWhitespace) {
-                    this._ignoreWhitespace = false;
-                    this.$scope.inputPattern = this.$scope.inputPattern.replace(RegexTesterController.whitespacRe, "");
-                }
+        }
+    }
+    app.mainModule.controller("regexTester", ["$scope", "regexParser", "evaluateExpression", RegexTesterController]);
+    // #endregion
+    // #region incrementalId Service
+    class incrementalIdService {
+        constructor() {
+            this._id = 0;
+        }
+        next() {
+            let result = this._id++;
+            if (result < 32768)
+                return result;
+            this._id = 0;
+            return this.next();
+        }
+    }
+    app.mainModule.service("incrementalId", [function () { return new incrementalIdService(); }]);
+    // #endregion
+    // #region regexParser Service
+    const whitespaceRe = /[\s\r\n\p{C}]+/g;
+    class RegexParserService {
+        constructor($q, regexOptions) {
+            this.$q = $q;
+            this.regexOptions = regexOptions;
+            this._flags = "";
+            this._inputRegexPattern = "";
+            this._parsePending = false;
+            this._pauseLevel = 0;
+            let service = this;
+            regexOptions.whenFlagsChanged((flags) => {
+                if (service._flags === flags)
+                    return;
+                service._flags = flags;
+                if (this._pauseLevel > 0)
+                    this._parsePending = true;
                 else
-                    this._ignoreWhitespace = true;
+                    this.startParseCurrentPattern();
+            });
+            this._flags = regexOptions.flags;
+        }
+        get isPaused() { return this._pauseLevel > 0; }
+        get inputRegexPattern() { return this._inputRegexPattern; }
+        set inputRegexPattern(value) {
+            let pattern = ((typeof value === "undefined") || value === null) ? "" : ((typeof value === "string") ? value : "" + value);
+            if (this._inputRegexPattern === pattern)
+                return;
+            this._inputRegexPattern = pattern;
+            app.execIfFunction(this._whenInputPatternChanged, this._inputRegexPattern);
+            if (this._pauseLevel > 0)
+                this._parsePending = true;
+            else
+                this.startParseCurrentPattern();
+        }
+        get lastParsedPattern() { return this._parsedPattern; }
+        withParsingPaused(callback, thisArg) {
+            this._pauseLevel++;
+            try {
+                return callback();
             }
-            if (this._inputPattern !== this.$scope.inputPattern || this._isGlobal !== this.$scope.isGlobal || this._multiline !== this.$scope.multiline || this._ignoreCase !== this.$scope.ignoreCase || this._sticky !== this.$scope.sticky ||
-                this._unicode !== this.$scope.unicode || this._dotAll !== this.$scope.dotAll) {
-                this.$scope.patternParseError = '';
-                this._inputPattern = this.$scope.inputPattern;
-                this._isGlobal = this.$scope.isGlobal;
-                this._multiline = this.$scope.multiline;
-                this._ignoreCase = this.$scope.ignoreCase;
-                this._sticky = this.$scope.sticky;
-                this._unicode = this.$scope.unicode;
-                this._dotAll = this.$scope.dotAll;
-                this.$scope.showParseError = false;
+            finally {
+                this._pauseLevel--;
+                if (this._pauseLevel == 0 && this._parsePending) {
+                    this._parsePending = false;
+                    this.startParseCurrentPattern();
+                }
+            }
+        }
+        whenInputPatternChanged(callback) { this._whenInputPatternChanged = app.chainCallback(this._whenInputPatternChanged, callback); }
+        whenParsedPatternChanged(callback) { this._whenParsedPatternChanged = app.chainCallback(this._whenParsedPatternChanged, callback); }
+        whenPatternParseSucceeded(callback) { this._whenPatternParseSucceeded = app.chainCallback(this._whenPatternParseSucceeded, callback); }
+        whenPatternParseFailed(callback) { this._whenPatternParseFailed = app.chainCallback(this._whenPatternParseFailed, callback); }
+        startParseCurrentPattern() {
+            let result;
+            let pattern = this._inputRegexPattern;
+            this._result = result = this.$q((resolve, reject) => {
+                let result;
                 try {
-                    this.$scope.flags = '';
-                    if (this._ignoreCase)
-                        this.$scope.flags = 'i';
-                    if (this._isGlobal)
-                        this.$scope.flags += 'g';
-                    if (this._multiline)
-                        this.$scope.flags += 'm';
-                    if (this._unicode)
-                        this.$scope.flags += 'u';
-                    if (this._sticky)
-                        this.$scope.flags += 'y';
-                    if (this._dotAll)
-                        this.$scope.flags += 's';
-                    let pattern = this._inputPattern;
-                    if (this.$scope.ignoreWhitespace)
-                        pattern = pattern.replace(RegexTesterController.whitespacRe, "");
-                    this.$scope.fullPattern = "/" + pattern + "/" + this.$scope.flags;
-                    let regex = (this.$scope.flags.length == 0) ? new RegExp(pattern) : new RegExp(pattern, this.$scope.flags);
-                    if (app.isNil(regex))
-                        throw "Failed to create regular expression.";
-                    this._regex = regex;
-                    if (pattern.length == 0) {
-                        this.$scope.patternParseError = 'Pattern is empty.';
-                        this.$scope.validationClass = ['alert', 'alert-warning'];
-                    }
-                    else
-                        this.$scope.validationClass = [];
+                    result = new RegExp(pattern, this._flags);
                 }
                 catch (e) {
-                    this.$scope.patternParseError = (typeof (e) === 'string') ? e : JSON.stringify(e);
-                    this.$scope.validationClass = ['alert', 'alert-danger'];
-                    this.$scope.index = -1;
-                    this.$scope.matchGroups = [];
+                    reject(e);
                     return;
                 }
-                this._inputText = [];
-                this.$scope.inputItems.forEach((item) => {
-                    item.evaluated = item.success = false;
-                    item.statusMessage = "Not evaluated";
-                    item.cssClass = ['alert', 'alert-secondary'];
-                });
-            }
+                if (app.isNil(result))
+                    reject("Failed ot parse regular expression.");
+                else
+                    resolve(result);
+            }).then((result) => {
+                this._parsedPattern = result;
+                try {
+                    app.execIfFunction(this._whenPatternParseSucceeded, result);
+                }
+                finally {
+                    app.execIfFunction(this._whenParsedPatternChanged, result);
+                }
+                return result;
+            }, (reason) => {
+                let errorReason = app.asErrorResult(reason);
+                this._parsedPattern = undefined;
+                try {
+                    app.execIfFunction(this._whenPatternParseFailed, pattern, reason);
+                }
+                finally {
+                    app.execIfFunction(this._whenParsedPatternChanged, undefined);
+                }
+                return errorReason;
+            });
+            return result;
+        }
+        then(successCallback, errorCallback) {
+            let result = this._result;
+            if (app.isNil(result))
+                return this.startParseCurrentPattern();
+            return result.then(successCallback, errorCallback);
+        }
+    }
+    app.mainModule.service("regexParser", ["$q", "regexOptions", function ($q, regexOptions) {
+            return new RegexParserService($q, regexOptions);
+        }]);
+    class EvaluationSourceItem {
+        constructor(_parentArray) {
+            this._parentArray = _parentArray;
+            this._canDelete = true;
+            this._isEvaluated = false;
+            this._success = false;
+            this._text = "";
+            this._cardNumber = _parentArray.length + 1;
+            _parentArray.push(this);
+            if (this._cardNumber == 1)
+                this._canDelete = false;
             else {
-                this.$scope.inputItems.forEach((item) => {
-                    if (typeof (item.inputText) !== 'string')
-                        item.inputText = '';
-                    if (this._inputText.indexOf(item.inputText) < 0) {
-                        item.evaluated = item.success = false;
-                        item.statusMessage = "Not evaluated";
-                        item.cssClass = ['alert', 'alert-secondary'];
-                    }
-                });
+                this._canDelete = true;
+                if (this._cardNumber == 2)
+                    this._parentArray[0]._canDelete = true;
+            }
+        }
+        get cardNumber() { return this._cardNumber; }
+        get canDelete() { return this._canDelete; }
+        get isEvaluated() { return this._isEvaluated; }
+        get success() { return this._success; }
+        get resultsButtonText() { return (this._isEvaluated) ? ((this._success) ? "Matched " + this._groups.length + " groups." : "No match") : "Not Evaluated"; }
+        get text() { return this._text; }
+        getResultClass() {
+            if (this._isEvaluated)
+                return [(this._success) ? "btn-success" : "btn-warning"];
+            return ["btn-secondary"];
+        }
+        delete() {
+            if (typeof this._parentArray === "undefined" || this._parentArray.length < 2)
+                return false;
+            if (this._cardNumber == 1)
+                this._parentArray.shift();
+            else if (this._cardNumber == this._parentArray.length)
+                this._parentArray.pop();
+            else
+                this._parentArray.splice(this._cardNumber - 1, 1);
+            for (let i = this._cardNumber - 1; i < this._parentArray.length; i++)
+                this._parentArray[i]._cardNumber = i + 1;
+            this._parentArray = undefined;
+            return true;
+        }
+        static initialize(items, scope) {
+            if (app.isNil(scope.sourceItems) || !Array.isArray(scope.sourceItems))
+                scope.sourceItems = [];
+            let e = (items.length < scope.sourceItems.length) ? items.length : scope.sourceItems.length;
+            let i;
+            for (i = 0; i < e; i++) {
+                let source = items[i];
+                let target = scope.sourceItems[i];
+                if ((typeof target !== "object") || target === null)
+                    scope.sourceItems[i] = target = (scope.$new());
+                target.canDelete = source._canDelete;
+                target.controlId = "evaluationSourceTextBox" + source._cardNumber.toString();
+                target.resultsButtonText = source.resultsButtonText;
+                target.resultsClick = () => { return source._isEvaluated; };
+                target.delete = () => { return source.delete(); };
+                target.resultsHref = (source._isEvaluated) ? "#results" + source._cardNumber.toString() : "#";
+                target.text = source._text;
+            }
+            while (scope.sourceItems.length > 3)
+                scope.sourceItems.pop();
+            while (e < items.length) {
+                let source = new EvaluationSourceItem(items);
+                let target = (scope.$new());
+                scope.sourceItems.push(target);
+                target.canDelete = source._canDelete;
+                target.controlId = "evaluationSourceTextBox" + source._cardNumber.toString();
+                target.resultsButtonText = source.resultsButtonText;
+                target.resultsClick = () => { return source._isEvaluated; };
+                target.delete = () => { return source.delete(); };
+                target.resultsHref = (source._isEvaluated) ? "#results" + source._cardNumber.toString() : "#";
+                target.text = source._text;
             }
         }
     }
-    RegexTesterController.whitespacRe = /\s+/g;
-    regexTester.RegexTesterController = RegexTesterController;
-    app.mainModule.controller("RegexTesterController", ["$scope", "LocalRegexStorageService", RegexTesterController]);
+    class EvaluationSourceService {
+        constructor() {
+            this._items = [];
+        }
+        initialize(scope) { EvaluationSourceItem.initialize(this._items, scope); }
+    }
+    app.mainModule.service("evaluationSource", [function () { return new EvaluationSourceService(); }]);
+    class EvaluateExpressionService {
+        constructor($q, regexParser, regexOptions) {
+            this.$q = $q;
+            this.regexParser = regexParser;
+            this.regexOptions = regexOptions;
+        }
+        startEvaluateCurrent() {
+            let result;
+            this._result = result = this.regexParser.then((re) => {
+                return this.$q((resolve) => {
+                    return this.regexParser.then((re) => {
+                        throw new Error("Resolver not implemented.");
+                    });
+                }).then((result) => { return result; }, (reason) => {
+                    let errorReason = app.asErrorResult(reason);
+                    throw new Error("Reject not implemented.");
+                    // this._parsedPattern = undefined;
+                    // try { app.execIfFunction<string, app.ErrorResult>(this._whenPatternParseFailed, pattern, reason); }
+                    // finally { app.execIfFunction<RegExp | undefined>(this._whenParsedPatternChanged, undefined); }
+                    // return errorReason;
+                });
+            });
+            return result;
+        }
+        then(successCallback, errorCallback) {
+            return this._result.then(successCallback, errorCallback);
+        }
+    }
+    app.mainModule.service("evaluateExpression", ["$q", "regexParser", "regexOptions", function ($q, regexParser, regexOptions) {
+            return new EvaluateExpressionService($q, regexParser, regexOptions);
+        }]);
+    // #region RegexOptions Service
+    class RegexOptionsService {
+        // #endregion
+        constructor() {
+            // #region flags Property
+            this._flags = "";
+            // #endregion
+            // #region global Property
+            this._global = false;
+            // #endregion
+            // #region ignoreCase Property
+            this._ignoreCase = false;
+            // #endregion
+            // #region multiline Property
+            this._multiline = false;
+            // #endregion
+            // #region dotMatchesNewline Property
+            this._dotMatchesNewline = false;
+            // #endregion
+            // #region unicode Property
+            this._unicode = false;
+            // #endregion
+            // #region sticky Property
+            this._sticky = false;
+        }
+        get flags() { return this._flags; }
+        get global() { return this._global; }
+        set global(value) {
+            if (this._global === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._global = value;
+            this.updateFlags();
+        }
+        get ignoreCase() { return this._ignoreCase; }
+        set ignoreCase(value) {
+            if (this._ignoreCase === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._ignoreCase = value;
+            this.updateFlags();
+        }
+        get multiline() { return this._multiline; }
+        set multiline(value) {
+            if (this._multiline === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._multiline = value;
+            this.updateFlags();
+        }
+        get dotMatchesNewline() { return this._dotMatchesNewline; }
+        set dotMatchesNewline(value) {
+            if (this._dotMatchesNewline === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._dotMatchesNewline = value;
+            this.updateFlags();
+        }
+        get unicode() { return this._unicode; }
+        set unicode(value) {
+            if (this._unicode === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._unicode = value;
+            this.updateFlags();
+        }
+        get sticky() { return this._sticky; }
+        set sticky(value) {
+            if (this._sticky === ((typeof (value) == "boolean") ? value : (value = value === true)))
+                return;
+            this._sticky = value;
+            this.updateFlags();
+        }
+        static toFlags(source) {
+            let flags = (source.global) ? "g" : "";
+            if (source.ignoreCase)
+                flags += "i";
+            if (source.multiline)
+                flags += "m";
+            if (source.dotMatchesNewline)
+                flags += "s";
+            if (source.unicode)
+                flags += "u";
+            return (source.sticky) ? flags + "y" : flags;
+        }
+        updateFrom(source) {
+            let flags = RegexOptionsService.toFlags(source);
+            if (flags === this._flags)
+                return false;
+            this._flags = flags;
+            this._dotMatchesNewline = source.dotMatchesNewline;
+            this._global = source.global;
+            this._ignoreCase = source.ignoreCase;
+            this._multiline = source.multiline;
+            this._sticky = source.sticky;
+            this._unicode = source.unicode;
+            this.updateFlags();
+            return true;
+        }
+        updateFlags() {
+            let flags;
+            this._flags = flags = RegexOptionsService.toFlags(this);
+            app.execIfFunction(this._whenFlagsChanged, flags);
+        }
+        updateTo(target) {
+            target.dotMatchesNewline = this._dotMatchesNewline;
+            target.global = this._global;
+            target.ignoreCase = this._ignoreCase;
+            target.multiline = this._multiline;
+            target.sticky = this._sticky;
+            target.unicode = this._unicode;
+        }
+        whenFlagsChanged(callback) {
+            this._whenFlagsChanged = app.chainCallback(this._whenFlagsChanged, callback);
+        }
+    }
+    app.mainModule.service("regexOptions", [function () { return new RegexOptionsService(); }]);
+    class InputSourceEditController {
+        constructor($scope, evaluationSource, evaluateExpression) {
+            this.$scope = $scope;
+        }
+        $doCheck() {
+        }
+    }
+    app.mainModule.controller("inputSourceEdit", ["$scope", "evaluationSource", "evaluateExpression", InputSourceEditController]);
+    // #endregion
+    // #region RegexPattern Controller
+    const editOptionsDialogId = "EditOptionsDialog";
+    class RegexPatternController {
+        constructor($scope, $log, regexOptions, regexParser) {
+            this.$scope = $scope;
+            this.$log = $log;
+            this.regexOptions = regexOptions;
+            this.regexParser = regexParser;
+            $scope.global = regexOptions.global;
+            $scope.ignoreCase = regexOptions.ignoreCase;
+            $scope.multiline = regexOptions.multiline;
+            $scope.dotMatchesNewline = regexOptions.dotMatchesNewline;
+            $scope.unicode = regexOptions.unicode;
+            $scope.sticky = regexOptions.sticky;
+            $scope.flags = regexOptions.flags;
+            $scope.ignoreWhitespace = false;
+            $scope.regexPattern = $scope.wsRegexPattern = this._pattern = this._wsRegexPattern = regexParser.inputRegexPattern;
+            $scope.editOptionsDialogId = editOptionsDialogId;
+            $scope.isValid = true;
+            $scope.textBoxClass = ["is-valid "];
+            $scope.patternValidationMessage = "";
+            let controller = this;
+            $scope.showEditOptionsDialog = () => { controller.showEditOptionsDialog(); };
+            $scope.closeEditOptionsDialog = () => { controller.closeEditOptionsDialog(); };
+            regexOptions.whenFlagsChanged((value) => { controller.$scope.flags = value; });
+            regexParser.whenPatternParseSucceeded((re) => {
+                this.$scope.textBoxClass = ["is-valid "];
+                this.$scope.isValid = true;
+            });
+            regexParser.whenPatternParseFailed((text, reason) => {
+                this.$scope.textBoxClass = ["is-invalid"];
+                this.$scope.isValid = false;
+                $scope.patternValidationMessage = (typeof reason === "string") ? reason : (typeof reason.message === "string" && reason.message.trim().length > 0) ? reason.message : "" + reason;
+            });
+        }
+        showEditOptionsDialog() {
+            this.$scope.editOptionsDialogVisible = true;
+            $("#" + this.$scope.editOptionsDialogId).modal("show");
+        }
+        closeEditOptionsDialog() {
+            this.$scope.editOptionsDialogVisible = false;
+            $("#" + this.$scope.editOptionsDialogId).modal("hide");
+        }
+        $doCheck() {
+            this.regexParser.withParsingPaused(() => {
+                let hasChanges = true;
+                if (this._wsRegexPattern !== this.$scope.wsRegexPattern)
+                    this.regexParser.inputRegexPattern = this.$scope.regexPattern = this._pattern = (this._wsRegexPattern = this.$scope.wsRegexPattern).replace(whitespaceRe, "");
+                else if (this._pattern !== this.$scope.regexPattern)
+                    this.regexParser.inputRegexPattern = this._pattern = this._wsRegexPattern = this.$scope.wsRegexPattern = this.$scope.regexPattern;
+                else
+                    hasChanges = false;
+                this.regexOptions.updateFrom(this.$scope);
+            });
+        }
+    }
+    app.mainModule.controller("regexPattern", ["$scope", "$log", "regexOptions", "regexParser", RegexPatternController]);
+    // #endregion
 })(regexTester || (regexTester = {}));
 //# sourceMappingURL=RegexTester.js.map

@@ -11,150 +11,122 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
     <script src="lib/angular.js/angular.js"></script>
-    <script src="app.js"></script>
-    <script src="RegexTester.js"></script>
+    <script src="App/app.js"></script>
+    <script src="App/RegexTester.js"></script>
 </head>
-<body>
-    <top-nav-and-header headerText="Regular Expression Tester" pageId="regexTester"></top-nav-and-header>
-    <section class="container-fluid" ng-controller="RegexTesterController">
+<body ng-app="mainModule">
+    <top-nav-and-header header-text="Regular Expression Tester" page-id="regexTester"></top-nav-and-header>
+    <section class="container-fluid" ng-controller="regexTester">
         <form action="RegexTester.html" method="get">
-            <div class="form-row">
-                <div class="form-group col-12" ng-class="validationClass">
-                    <label for="inputPatternTextBox">Regular Expression</label>
+            <h3>Input Text</h3>
+            <table class="table" ng-controller="inputSourceEdit">
+                <tbody>
+                    <tr ng-repeat="for item in sourceItems">
+                        <th class="text-right" scope="row"><label for="{{controlId}}">#1:</label></th>
+                        <td>
+                            <textarea class="form-control" id="{{controlId}}" wrap="soft" rows="6">{{text}}</textarea>
+                        </td>
+                        <td><a href="{{resultsHref}}" class="btn btn-success m-0 btn-sm" ng-class="resultsButtonClass" ng-click="resultsClick()">{{resultsButtonText}}</a></td>
+                        <td><button type="button" class="btn btn-primary m-0 btn-sm" ng-show="canDelete" ng-click="delete()">Delete</button></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3"></td>
+                        <td><button type="button" class="btn btn-primary m-0" ng-click="addSourceItem()">Add</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="form-row" ng-controller="regexPattern">
+                <div class="form-group col-12">
+                    <h3><label for="inputPatternTextBox">Regular Expression</label></h3>
                     <div class="input-group mb-3">
-                        <div class="input-group-prepend"><span class="input-group-text">/</span></div>
-                        <input type="text" class="form-control" ng-model="inputPattern" id="inputPatternTextBox" ng-hide="ignoreWhitespace" />
-                        <textarea class="form-control" id="inputPatternTextBox" rows="{{ inputRowCount }}" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}" ng-model="inputPattern" ng-show="ignoreWhitespace"></textarea>
+                        <div class="input-group-prepend"><div><span class="input-group-text">/</span></div></div>
+                        <textarea class="form-control" id="inputPatternTextBox" name="inputPatternTextBox" rows="24" wrap="hard" ng-class="textBoxClass" ng-show="ignoreWhitespace" ng-model="wsRegexPattern" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}"></textarea>
+                        <input type="text" id="inputPatternTextBox" name="inputPatternTextBox" class="form-control" ng-class="textBoxClass" ng-hide="ignoreWhitespace" ng-model="regexPattern" />
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary btn-sm" type="button" ng-click="setInputRowCount(true)" ng-hide="!ignoreWhitespace || inputRowCount > 25">+</button>
-                            <button class="btn btn-outline-secondary btn-sm" type="button" ng-click="setInputRowCount(false)" ng-hide="!ignoreWhitespace || inputRowCount < 3">-</button>
-                            <span class="input-group-text text-monospace">/{{ flags }}</span>
-                            <button class="btn btn-outline-secondary" type="button" ng-click="editOptions(true)" ng-hide="showOptions" data-toggle="tooltip" data-placement="bottom" title="Edit Options">...</button>
+                            <div><button class="btn btn-outline-secondary input-group-text input-group-text" type="button" data-toggle="tooltip" data-placement="bottom" title="Edit Options" ng-click="showEditOptionsDialog()">/{{flags}}</button></div>
                         </div>
                     </div>
-                    <div class="alert alert-danger" ng-show="showParseError">{{ patternParseError }}</div>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions">
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="ignoreCase" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Ignore Case</label>
+                    <div class="alert alert-danger small" ng-hide="isValid">{{patternValidationMessage}}</div>
+                    <div class="modal fade modal-lg" id="{{editOptionsDialogId}}" tabindex="-1" role="dialog" aria-labelledby="editOptionsDialogTitle" aria-hidden="{{editOptionsDialogVisible}}">
+                        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editOptionsDialogTitle">Regular Expression Pattern Options</h5>
+                                    <button type="button" class="close" aria-label="Close" ng-click="closeEditOptionsDialog()">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <div class="form-check col-3">
+                                                <input class="form-check-input" type="checkbox" name="globalCheckBox" id="globalCheckBox" ng-model="global" />
+                                                <label class="form-check-label" for="globalCheckBox">Global match <small>(find all matches rather than stopping after the first match)</small>.</label>
+                                            </div>
+                                            <div class="form-check col-3">
+                                                <input class="form-check-input" type="checkbox" name="ignoreCaseCheckBox" id="ignoreCaseCheckBox" ng-model="ignoreCase" />
+                                                <label class="form-check-label" for="ignoreCaseCheckBox">ignore case <small>(if u flag is also enabled, use Unicode case folding)</small>.</label>
+                                            </div>
+                                            <div class="form-check col-6">
+                                                <input class="form-check-input" type="checkbox" name="multilineCheckBox" id="multilineCheckBox" ng-model="multiline" />
+                                                <label class="form-check-label" for="multilineCheckBox">multiline <small>(treat beginning and end characters (^ and $) as working over multiple lines (i.e., match the beginning or end of each line (delimited by \n or \r), not only the very beginning or end of the whole input string))</small>.</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-check col-3">
+                                                <input class="form-check-input" type="checkbox" name="dotMatchesNewlineCheckBox" id="dotMatchesNewlineCheckBox" ng-model="dotMatchesNewline" />
+                                                <label class="form-check-label" for="dotMatchesNewlineCheckBox">&quot;dotAll&quot; <small>(allows <code>.</code> to match newlines)</small>.</label>
+                                            </div>
+                                            <div class="form-check col-3">
+                                                <input class="form-check-input" type="checkbox" name="unicodeCheckBox" id="unicodeCheckBox" ng-model="unicode" />
+                                                <label class="form-check-label" for="unicodeCheckBox">Unicode <small>(treat pattern as a sequence of Unicode code points)</small>.</label>
+                                            </div>
+                                            <div class="form-check col-6">
+                                                <input class="form-check-input" type="checkbox" name="stickyCheckBox" id="stickyCheckBox" ng-model="sticky" />
+                                                <label class="form-check-label" for="stickyCheckBox">Sticky <small>(matches only from the index indicated by the lastIndex property of this regular expression in the target string &mdash; and does not attempt to match from any later indexes)</small>.</label>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-check col-12">
+                                                <input class="form-check-input" type="checkbox" name="ignoreWhitespaceCheckBox" id="ignoreWhitespaceCheckBox" ng-model="ignoreWhitespace" />
+                                                <label class="form-check-label" for="ignoreWhitespaceCheckBox">Ignore Whitespace <small>(whitespace is trimmed from pattern before evaluating)</small></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" ng-click="closeEditOptionsDialog()">Close</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="multiline" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Multi-line</label>
-                    </div>
-                </div>
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="isGlobal" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Global Match</label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions">
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="dotAll" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">&quot;.&quot; matches all</label>
-                    </div>
-                </div>
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="sticky" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Sticky</label>
-                    </div>
-                </div>
-                <div class="form-group col-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="unicode" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Unicode</label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions">
-                <div class="form-group col-12">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" ng-model="ignoreWhitespace" id="CheckBox">
-                        <label class="form-check-label" for="CheckBox">Ignore Whitespace (removes whitespace before evaluating regular expression).</label>
-                    </div>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions && (savedNames.length > 0 || sessionLoadMessage.length > 0)">
-                <div class="form-group col-12">
-                    <h3 ng-show="sessionLoadMessage.length > 0 || (showOptions && savedNames.length > 0)">Saved sessions</h3>
-                    <div class="alert alert-info" ng-show="sessionLoadMessage.length > 0"> {{ sessionLoadMessage }}</div>
-                    <ul ng-show="showOptions && savedNames.length > 0">
-                        <li ng-repeat="i in savedNames">
-                            &quot;{{ i }}&quot;
-                            <button type="button" class="btn btn-primary btn-sm" ng-click="loadSession(i)">Load</button>
-                            <button type="button" class="btn btn-primary btn-sm" ng-click="deleteSession(i)">Delete</button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions">
-                <div class="form-group col-1">
-                    <label for="currentSavedNameTextBox">Name</label>
-                </div>
-                <div class="form-group col-10">
-                    <input type="text" class="form-control" ng-model="currentSavedName" id="currentSavedNameTextBox" />
-                    <div class="alert alert-info" ng-show="sessionSaveMessage.length > 0"> {{ sessionSaveMessage }}</div>
-                </div>
-                <div class="form-group col-1">
-                    <button type="button" class="btn btn-primary" ng-click="saveSession()">Save</button>
-                </div>
-            </div>
-            <div class="form-row" ng-show="showOptions">
-                <div class="form-group col-12">
-                    <button type="button" class="btn btn-primary" ng-click="editOptions(false)">Hide Options</button>
-                </div>
-            </div>
-            <div class="form-row" ng-repeat="item in inputItems" id="inputRow{{ item.itemNumber }}">
-                <div class="form-group col-1 text-right font-weight-bold" ng-class="item.cssClass" ng-hide="item.isCurrent">Test String {{ item.itemNumber }}:</div>
-                <div class="form-group col-10" ng-class="item.cssClass" ng-hide="item.isCurrent"><pre class="small mb-0">{{ item.inputText }}</pre></div>
-                <div class="form-group col-11" ng-class="item.cssClass" ng-show="item.isCurrent">
-                    <label for="inputTextarea{{ item.itemNumber }}">Test String {{ item.itemNumber }}</label>
-                    <textarea class="form-control" id="inputTextarea{{ item.itemNumber }}" rows="3" ng-model="item.inputText"></textarea>
-                </div>
-                <div class="col-1">
-                    <button type="button" class="btn btn-primary m-0 btn-sm" ng-click="item.edit()" ng-hide="item.isCurrent">Edit</button>
-                    <button type="button" class="btn btn-primary m-0 btn-sm" ng-click="item.delete()" ng-show="item.canDelete">Delete</button>
-                    <a ng-href="{{ '#resultRow' + item.itemNumber.toString() }}" class="btn btn-primary btn-sm m-0" ng-show="item.evaluated">Result</a>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="col-2">
-                    <button type="button" class="btn btn-primary mb-2" ng-click="addInputItem()">Add</button>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group col-12">
-                    <button type="button" class="btn btn-primary" ng-click="evaluate()">Evaluate</button>
+                    <button type="button" class="btn btn-primary" ng-click="evaluateExpression()" ng-disabled="evaluationIsDisabled">Evaluate</button>
                 </div>
             </div>
-            <div class="form-row" ng-show="showEvaluations">
+            <h3>Results</h3>
+            <div class="form-row">
                 <div class="form-group col-12">
-                    <label for="inputPatternTextBox">Evaluated Regular Expression</label>
-                    <input type="text" class="form-control" ng-model="fullPattern" id="fullPatternTextBox" readonly="readonly" />
+                    <div>Evaluated Regular Expression</div>
+                    <div class="pre-scrollable border border-secondary">/^(([^\\\/@:]*)(:[\\\/]{0,2})((?=[^\\\/@:]*(?::[^\\\/@:]*)?@)([^\\\/@:]*)(:[^\\\/@:]*)?@)?([^\\\/@:]*)(?:(?=:\d*(?:[\\\/:]|$)):(\d*))?(?=[\\\/:]|$))?(.+)?$/</div>
                 </div>
             </div>
-            <table class="table table-striped col-12" ng-show="showEvaluations">
+            <table class="table col-12">
                 <thead class="thead-dark">
                     <tr>
-                        <th scope="col">#</th>
+                        <th class="text-right" scope="col">#</th>
                         <th scope="col">Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr id="resultRow{{ item.itemNumber }}" ng-repeat="item in inputItems">
-                        <th scope="row">{{  item.itemNumber }}</th>
+                    <tr>
+                        <th class="table-success text-right" scope="row">#1:</th>
                         <td class="border border-dark">
-                            <strong>{{ item.statusMessage }}</strong>
-                            <table class="table" ng-show="item.success">
+                            <h4 id="results1">Match starting at index 4</h4>
+                            <table class="table table-bordered border-secondary">
                                 <thead>
                                     <tr>
                                         <th scope="col">#</th>
@@ -163,18 +135,47 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr ng-repeat="g in item.matchGroups">
-                                        <th scope="row">{{  g.index }}</th>
-                                        <td>{{ g.statusMessage }}</td>
-                                        <td>{{ g.value }}</td>
+                                    <tr>
+                                        <th class="table-primary" scope="row">0</th>
+                                        <td class="small table-primary">(entire match)</td>
+                                        <td class="pre-scrollable table-primary">asdf adsfasdf</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-success" scope="row">1</th>
+                                        <td class="table-success">Matched <span class="small">(4 characters)</span></td>
+                                        <td class="pre-scrollable table-success">asdf</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-warning" scope="row">2</th>
+                                        <td class="table-warning" colspan="2">No match</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="table-success" scope="row">3</th>
+                                        <td class="table-success">Matched <span class="small">(16 characters)</span></td>
+                                        <td class="pre-scrollable table-success">
+                                            adsfasdf
+                                            abcdef
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
-                            <div>
-                                <strong class="small">Source:</strong>
-                                <pre class="small mb-0 border border-dark p-2">{{ item.inputText }}</pre>
-                                <a ng-href="{{ '#inputRow' + item.itemNumber.toString() }}" class="btn btn-primary m-2 form-control-sm" ng-click="item.edit()">Edit</a>
-                            </div>
+                            <div class="small font-weight-bold">Text before match (4 characters)</div>
+                            <pre class="small mb-0 border border-dark p-2 pre-scrollable">xyz </pre>
+                            <div class="small font-weight-bold">Text after match (5 characters)</div>
+                            <pre class="small mb-0 border border-dark p-2 pre-scrollable"> asdf</pre>
+                            <div class="small font-weight-bold">Source</div>
+                            <pre class="small mb-0 border border-dark p-2 pre-scrollable">xyz asdf adsfasdf
+abcdef asdf</pre>
+                            <a href="#inpuTextBox1" class="btn btn-primary form-control-sm font-weight-bold">Edit</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="table-warning text-right" scope="row">#2:</th>
+                        <td class="border border-dark">
+                            <h4 id="results2">Match not found</h4>
+                            <div class="small font-weight-bold">Source</div>
+                            <pre class="small mb-0 border border-dark p-2 pre-scrollable">xyz asdf adsfasdf</pre>
+                            <a href="#inpuTextBox2" class="btn btn-primary form-control-sm font-weight-bold">Edit</a>
                         </td>
                     </tr>
                 </tbody>
