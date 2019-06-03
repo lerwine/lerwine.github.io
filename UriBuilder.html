@@ -17,7 +17,53 @@
 <body>
     <top-nav-and-header headerText="URI Builder" pageId="uriBuilder"></top-nav-and-header>
     <section class="container-fluid" ng-controller="UriBuilderController">
-        <form action="UriBuilder.html" method="get"></form>
+        <form action="UriBuilder.html" method="get">
+            <div class="form-row">
+                <div class="form-group col-12">
+                    <label for="hrefTextBox">Full URI</label>
+                    <input type="text" id="hrefTextBox" name="hrefTextBox" class="form-control" ng-model="href" ng-change="hrefChanged()" />
+                </div>
+            </div>
+            <div class="form-row">
+                <h3>Origin<input class="form-check-input" type="checkbox" name="originCheckBox" id="originCheckBox" ng-model="originEnabled" ng-change="originChanged()" /></h3>
+                <div class="form-group col-8" ng-show="originEnabled">
+                    <label for="schemeNameDropdown">Scheme</label>
+                    <select id="schemeNameDropdown" ng-model="selectedScheme" ng-change="schemeChanged()">
+                        <option ng-repeat="for item in schemeOptions" value="{{item.name}}">{{item.name}} ({{item.description}})</option>
+                    </select>
+                    <input type="text" id="schemeNameTextBox" name="schemeNameTextBox" class="form-control" readonly="readonly" ng-show="selectedScheme.length == 0" ng-model="schemeName" ng-change="schemeChanged()" />
+                </div>
+                <div class="form-group col-4" ng-show="originEnabled">
+                    <label for="selectedSeparatorControl">Separator</label>
+                    <select id="selectedSeparatorControl" name="selectedSeparatorControl" ng-model="selectedSeparator" ng-options="for value in separatorOptions" ng-show="selectedScheme.length == 0" ng-change="schemeChanged()"></select>
+                    <input type="text" id="selectedSeparatorControl" name="selectedSeparatorControl" class="form-control" readonly="readonly" ng-model="selectedSeparator" ng-hide="selectedScheme.length == 0" />
+                </div>
+            </div>
+            <div class="form-row" ng-show="originEnabled">
+                <h3>User Info<input class="form-check-input" type="checkbox" name="originCheckBox" id="originCheckBox" ng-model="enableUsername" ng-change="userInfoChanged()" /></h3>
+                <div class="form-group col-6" ng-show="enableUsername">
+                    <label for="usernameTextBox">User Name</label>
+                    <input type="text" id="usernameTextBox" name="usernameTextBox" class="form-control" ng-model="username" ng-change="userInfoChanged()" />
+                </div>
+                <div class="form-group col-6" ng-show="enableUsername">
+                    <label for="enablePasswordCheckBox">Password</label>
+                    <input class="form-check-input" type="checkbox" name="enablePasswordCheckBox" id="enablePasswordCheckBox" ng-model="enablePassword" ng-change="userInfoChanged()" />
+                    <input type="text" id="passwordTextBox" name="passwordTextBox" class="form-control" ng-show="enablePassword" ng-model="password" ng-change="userInfoChanged()" />
+                </div>
+            </div>
+            <div class="form-row" ng-show="originEnabled">
+                <h3>Host</h3>
+                <div class="form-group col-8">
+                    <label for="hostTextBox">Host Name</label>
+                    <input type="text" id="hostTextBox" name="hostTextBox" class="form-control" ng-model="host" ng-change="hostNameChanged()" />
+                </div>
+                <div class="form-group col-4">
+                    <label for="enablePortCheckBox">Port</label>
+                    <input class="form-check-input" type="checkbox" name="enablePortCheckBox" id="enablePortCheckBox" ng-model="enablePort" ng-change="portChanged()" />
+                    <input type="text" id="portTextBox" name="portTextBox" class="form-control" ng-show="enablePort" ng-model="port" ng-change="    ()" />
+                </div>
+            </div>
+        </form>
     </section>
     <footer class="container-fluid ">&copy; Leonard T. Erwine 2019.</footer>
 </body>
