@@ -9,6 +9,7 @@ var app;
     * @type {ng.IModule}
     */
     app.mainModule = angular.module("mainModule", []);
+    const schemeParseRe = /^(?:([^:@\\\/]+)(:(?:\/\/?)?)|(:\/\/?))/;
     /**
      *
      *

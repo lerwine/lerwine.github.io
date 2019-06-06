@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app" xmlns:ng="http://angularjs.org">
+<head>
+    <meta name="viewport" content="width=1024, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta charset="utf-8" />
+    <title>Lenny's Pages</title>
+    <link rel="stylesheet" href="lib/twitter-bootstrap/css/bootstrap.css" type="text/css" />
+    <link rel="stylesheet" href="lib/angular.js/angular-csp.css" type="text/css" />
+    <link rel="stylesheet" href="app.css" type="text/css" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="lib/jquery/jquery.js"></script>
+    <script src="lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
+    <script src="lib/angular.js/angular.js"></script>
+    <script src="App/standaloneTest/app.js"></script>
+</head>
+<body ng-app="app" ng-controller="exampleController">
+    <section>
+        <div>text: {{ text }}</div>
+        <div>altText: {{ altText }}</div>
+        <accordion-group>
+            <div class="card">
+                <div class="card-header">
+                    <accordion-group-toggle-button class="btn" item-id="first" expanded-class="btn-secondary" collapsed-class="btn-primary">
+                        <accordion-group-button-text expanded-text="Hide" collapsed-text="Show" expanded-class="text-primary" collapsed-class="text-secondary"></accordion-group-button-text>
+                        <accordion-group-button-expanded><strong>First</strong></accordion-group-button-expanded>
+                        <accordion-group-button-collapsed>First</accordion-group-button-collapsed>
+                        <accordion-group-button-image expanded-src="" collapsed-src="" expanded-alt="" collapsed-alt="" expanded-class="" collapsed-class=""></accordion-group-button-image>
+                    </accordion-group-toggle-button>
+                </div>
+                <div class="card-body" accordion-group-content-id="first">
+                    First content
+                    <div>text: {{ text }}</div>
+                    <div>altText: {{ altText }}</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <button class="btn btn-primary" accordion-group-toggle-on-click="second">Item 2</button>
+                </div>
+                <div class="card-body" accordion-group-content-item="second">
+                    Second content
+                    <div>text: {{ text }}</div>
+                    altText: {{ altText }}
+                    <accordion-group>
+                        <div class="card">
+                            <div class="card-header">
+                                <button class="btn btn-primary" accordion-group-toggle-on-click="third">Item 3</button>
+                            </div>
+                            <div class="card-body" accordion-group-content-item="third">
+                                Third content
+                                <div>text: {{ text }}</div>
+                                <div>altText: {{ altText }}</div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <button class="btn btn-primary" accordion-group-toggle-on-click="fourth">Item 4</button>
+                            </div>
+                            <div class="card-body" accordion-group-content-item="fourth">
+                                Fourth content
+                                <div>text: {{ text }}</div>
+                                <div>altText: {{ altText }}</div>
+                            </div>
+                        </div>
+                        <div>text: {{ text }}</div>
+                        <div>altText: {{ altText }}</div>
+                    </accordion-group>
+                </div>
+            </div>
+            <div>text: {{ text }}</div>
+            <div>altText: {{ altText }}</div>
+        </accordion-group>
+    </section>
+</body>
+</html>
