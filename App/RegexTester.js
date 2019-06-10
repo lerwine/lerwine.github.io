@@ -1,5 +1,6 @@
 /// <reference path="Scripts/typings/jquery/jquery.d.ts"/>
 /// <reference path="Scripts/typings/angularjs/angular.d.ts"/>
+/// <reference path="sys.ts"/>
 /// <reference path="app.ts"/>
 var regexTester;
 (function (regexTester) {
@@ -65,7 +66,7 @@ var regexTester;
             if (this._inputRegexPattern === pattern)
                 return;
             this._inputRegexPattern = pattern;
-            app.execIfFunction(this._whenInputPatternChanged, this._inputRegexPattern);
+            sys.execIfFunction(this._whenInputPatternChanged, this._inputRegexPattern);
             if (this._pauseLevel > 0)
                 this._parsePending = true;
             else
@@ -85,10 +86,10 @@ var regexTester;
                 }
             }
         }
-        whenInputPatternChanged(callback) { this._whenInputPatternChanged = app.chainCallback(this._whenInputPatternChanged, callback); }
-        whenParsedPatternChanged(callback) { this._whenParsedPatternChanged = app.chainCallback(this._whenParsedPatternChanged, callback); }
-        whenPatternParseSucceeded(callback) { this._whenPatternParseSucceeded = app.chainCallback(this._whenPatternParseSucceeded, callback); }
-        whenPatternParseFailed(callback) { this._whenPatternParseFailed = app.chainCallback(this._whenPatternParseFailed, callback); }
+        whenInputPatternChanged(callback) { this._whenInputPatternChanged = sys.chainCallback(this._whenInputPatternChanged, callback); }
+        whenParsedPatternChanged(callback) { this._whenParsedPatternChanged = sys.chainCallback(this._whenParsedPatternChanged, callback); }
+        whenPatternParseSucceeded(callback) { this._whenPatternParseSucceeded = sys.chainCallback(this._whenPatternParseSucceeded, callback); }
+        whenPatternParseFailed(callback) { this._whenPatternParseFailed = sys.chainCallback(this._whenPatternParseFailed, callback); }
         startParseCurrentPattern() {
             let result;
             let pattern = this._inputRegexPattern;
@@ -101,27 +102,27 @@ var regexTester;
                     reject(e);
                     return;
                 }
-                if (app.isNil(result))
+                if (sys.isNil(result))
                     reject("Failed ot parse regular expression.");
                 else
                     resolve(result);
             }).then((result) => {
                 this._parsedPattern = result;
                 try {
-                    app.execIfFunction(this._whenPatternParseSucceeded, result);
+                    sys.execIfFunction(this._whenPatternParseSucceeded, result);
                 }
                 finally {
-                    app.execIfFunction(this._whenParsedPatternChanged, result);
+                    sys.execIfFunction(this._whenParsedPatternChanged, result);
                 }
                 return result;
             }, (reason) => {
-                let errorReason = app.asErrorResult(reason);
+                let errorReason = sys.asErrorResult(reason);
                 this._parsedPattern = undefined;
                 try {
-                    app.execIfFunction(this._whenPatternParseFailed, pattern, reason);
+                    sys.execIfFunction(this._whenPatternParseFailed, pattern, reason);
                 }
                 finally {
-                    app.execIfFunction(this._whenParsedPatternChanged, undefined);
+                    sys.execIfFunction(this._whenParsedPatternChanged, undefined);
                 }
                 return errorReason;
             });
@@ -129,7 +130,7 @@ var regexTester;
         }
         then(successCallback, errorCallback) {
             let result = this._result;
-            if (app.isNil(result))
+            if (sys.isNil(result))
                 return this.startParseCurrentPattern();
             return result.then(successCallback, errorCallback);
         }
@@ -180,7 +181,7 @@ var regexTester;
             return true;
         }
         static initialize(items, scope) {
-            if (app.isNil(scope.sourceItems) || !Array.isArray(scope.sourceItems))
+            if (sys.isNil(scope.sourceItems) || !Array.isArray(scope.sourceItems))
                 scope.sourceItems = [];
             let e = (items.length < scope.sourceItems.length) ? items.length : scope.sourceItems.length;
             let i;
@@ -234,11 +235,11 @@ var regexTester;
                         throw new Error("Resolver not implemented.");
                     });
                 }).then((result) => { return result; }, (reason) => {
-                    let errorReason = app.asErrorResult(reason);
+                    let errorReason = sys.asErrorResult(reason);
                     throw new Error("Reject not implemented.");
                     // this._parsedPattern = undefined;
-                    // try { app.execIfFunction<string, app.ErrorResult>(this._whenPatternParseFailed, pattern, reason); }
-                    // finally { app.execIfFunction<RegExp | undefined>(this._whenParsedPatternChanged, undefined); }
+                    // try { sys.execIfFunction<string, sys.ErrorResult>(this._whenPatternParseFailed, pattern, reason); }
+                    // finally { sys.execIfFunction<RegExp | undefined>(this._whenParsedPatternChanged, undefined); }
                     // return errorReason;
                 });
             });
@@ -348,7 +349,7 @@ var regexTester;
         updateFlags() {
             let flags;
             this._flags = flags = RegexOptionsService.toFlags(this);
-            app.execIfFunction(this._whenFlagsChanged, flags);
+            sys.execIfFunction(this._whenFlagsChanged, flags);
         }
         updateTo(target) {
             target.dotMatchesNewline = this._dotMatchesNewline;
@@ -359,7 +360,7 @@ var regexTester;
             target.unicode = this._unicode;
         }
         whenFlagsChanged(callback) {
-            this._whenFlagsChanged = app.chainCallback(this._whenFlagsChanged, callback);
+            this._whenFlagsChanged = sys.chainCallback(this._whenFlagsChanged, callback);
         }
     }
     app.mainModule.service("regexOptions", [function () { return new RegexOptionsService(); }]);

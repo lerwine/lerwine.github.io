@@ -11,58 +11,140 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
     <script src="lib/angular.js/angular.js"></script>
+    <script src="App/sys.js"></script>
     <script src="App/app.js"></script>
+    <script src="App/accordionGroup.js"></script>
     <script src="App/UriBuilder.js"></script>
 </head>
 <body>
     <top-nav-and-header headerText="URI Builder" pageId="uriBuilder"></top-nav-and-header>
-    <section class="container-fluid" ng-controller="UriBuilderController">
+    <section class="container-fluid">
         <form action="UriBuilder.html" method="get">
-            <div class="form-row">
-                <div class="form-group col-12">
-                    <label for="hrefTextBox">Full URI</label>
-                    <input type="text" id="hrefTextBox" name="hrefTextBox" class="form-control" ng-model="href" ng-change="hrefChanged()" />
+            <uri-builder>
+                <div class="card">
+                    <div class="card-header">
+                        <h2><button class="btn btn-primary" ng-click="uriBuilder.showEncodedUriString()" ng-disabled="uriBuilder.isEditingEncodedUriString" onclick="return false;">URI String</button></h2>
+                    </div>
+                    <div class="card-body" ng-show="uriBuilder.isEditingEncodedUriString">
+                        <input type="text" id="hrefTextBox" name="hrefTextBox" class="form-control" ng-model="uriBuilder.encodedUriString" />
+                    </div>
                 </div>
-            </div>
-            <div class="form-row">
-                <h3>Origin<input class="form-check-input" type="checkbox" name="originCheckBox" id="originCheckBox" ng-model="originEnabled" ng-change="originChanged()" /></h3>
-                <div class="form-group col-8" ng-show="originEnabled">
-                    <label for="schemeNameDropdown">Scheme</label>
-                    <select id="schemeNameDropdown" ng-model="selectedScheme" ng-change="schemeChanged()">
-                        <option ng-repeat="for item in schemeOptions" value="{{item.name}}">{{item.name}} ({{item.description}})</option>
-                    </select>
-                    <input type="text" id="schemeNameTextBox" name="schemeNameTextBox" class="form-control" readonly="readonly" ng-show="selectedScheme.length == 0" ng-model="schemeName" ng-change="schemeChanged()" />
+                <div class="card">
+                    <div class="card-header">
+                        <h2><button class="btn btn-primary" ng-click="uriBuilder.showUriComponents()" ng-disabled="uriBuilder.isEditingUriComponents" onclick="return false;">URI Components</button></h2>
+                    </div>
+                    <div class="card-body" ng-show="uriBuilder.isEditingUriComponents">
+                        <h3>URI type</h3>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isAbsoluteRadioButton" id="isAbsoluteRadioButton" ng-model="uriBuilder.isAbsoluteUri" ng-value="true" />
+                            <label class="form-check-label" for="isAbsoluteRadioButton">Absolute</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isAbsoluteRadioButton" id="isRelativeRadioButton" ng-model="uriBuilder.isAbsoluteUri" ng-value="false" />
+                            <label class="form-check-label" for="isRelativeRadioButton">Relative</label>
+                        </div>
+                        <uri-builder-origin>
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3>Origin</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-row">
+                                        <uri-builder-scheme>
+                                            <div class="form-group col-8">
+                                                <label for="schemeNameDropdown">Scheme</label>
+                                                <select id="schemeNameDropdown" ng-model="scheme.selectedScheme">
+                                                    <option ng-repeat="item in scheme.schemeOptions" value="{{item.name}}">{{item.displayText}})</option>
+                                                </select>
+                                                <input type="text" id="schemeNameTextBox" name="schemeNameTextBox" class="form-control" readonly="readonly" ng-show="scheme.selectedScheme.length == 0" ng-model="scheme.otherSchemeName" />
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <label for="selectedSeparatorControl">Separator</label>
+                                                <select id="selectedSeparatorControl" name="selectedSeparatorControl" ng-model="scheme.selectedSeparator" ng-options="label for value in scheme.separatorOptions" ng-show="scheme.selectedScheme.length == 0"></select>
+                                                <input type="text" id="selectedSeparatorControl" name="selectedSeparatorControl" class="form-control" readonly="readonly" ng-model="scheme.selectedSeparator" ng-hide="scheme.selectedScheme.length == 0" />
+                                            </div>
+                                        </uri-builder-scheme>
+                                    </div>
+                                    <div class="form-row" ng-hide="host.notSupported">
+                                        <uri-builder-host no-port-class="col-12" allows-port-class="col-8">
+                                            <div class="form-group" ng-class="class">
+                                                <label for="selectedSeparatorControl">Host Name</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend" ng-hide="host.notOptional"><input class="form-check-input" type="checkbox" ng-checked="host.hasName" /></div>
+                                                    <input type="text" id="hostNameTextBox" class="form-control" ng-disabled="host.noName" ng-model="host.name" />
+                                                    <div class="input-group-append" ng-show="host.hasPortNumber"><div>:</div></div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group col-4" ng-hide="host.portNotSupported">
+                                                <label for="selectedSeparatorControl">Port</label>
+                                                <div class="input-group">
+                                                    <div class="input-group-prepend"><input class="form-check-input" type="checkbox" ng-checked="host.hasPortNumber" /></div>
+                                                    <input type="text" id="hostNameTextBox" class="form-control" ng-disabled="host.noPortNumber" ng-model="host.portNumber" />
+                                                </div>
+                                            </div>
+                                        </uri-builder-host>
+                                    </div>
+                                </div>
+                            </div>
+                        </uri-builder-origin>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="form-check form-check-inline" ng-hide="pathString.isSupported">
+                                    <input class="form-check-input" type="checkbox" id="allowPathCheckbox" ng-checked="pathString.isShown" />
+                                    <label class="form-check-label" for="allowPathCheckbox">Allow Path</label>
+                                </div>
+                                <h3 ng-show="pathString.isShown"><button class="btn btn-primary" ng-click="uriBuilder.onCombinePathSegmentsClick()" onclick="return false;">Path String</button></h3>
+                            </div>
+                            <div class="card-body" ng-hide="showPathSegments">
+                                <input type="text" id="pathStringTextBox" class="form-control" ng-model="pathString.value" />
+                            </div>
+                        </div>
+                        <div class="card" ng-show="pathString.isShown">
+                            <div class="card-header">
+                                <h3><button class="btn btn-primary" ng-click="uriBuilder.onParsePathSegmentsClick()" onclick="return false;">Path Segments</button></h3>
+                            </div>
+                            <div class="card-body" ng-show="showPathSegments">
+                                Path segments go here.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="form-check" ng-hide="queryString.isSupported">
+                                    <input class="form-check-input" type="checkbox" id="allowQueryCheckbox" ng-checked="queryString.isShown" />
+                                    <label class="form-check-label" for="allowQueryCheckbox">Allow Query</label>
+                                </div>
+                                <h3 ng-show="queryString.isShown"><button class="btn btn-primary" ng-click="uriBuilder.onCombineQueryItemsClick()" onclick="return false;">Query String</button></h3>
+                            </div>
+                            <div class="card-body" ng-hide="showQueryItems">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend"><input class="form-check-input" type="checkbox" ng-checked="queryString.hasValue" /></div>
+                                    <input type="text" id="queryStringTextBox" class="form-control" ng-model="queryString.value" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card" ng-show="queryString.isShown">
+                            <div class="card-header">
+                                <h3><button class="btn btn-primary" ng-click="uriBuilder.onParseQueryStringClick()" onclick="return false;">Query Items</button></h3>
+                            </div>
+                            <div class="card-body" ng-show="showQueryItems">
+                                <input class="form-check-input" type="checkbox" ng-checked="queryString.hasValue" />
+                                Query items go here.
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>
+                                    <input class="form-check-input" type="checkbox" id="hasFragmentCheckbox" ng-checked="fragment.hasValue" />
+                                    <label class="form-check-label" for="hasFragmentCheckbox">Fragment</label>
+                                </h3>
+                            </div>
+                            <div class="card-body" ng-show="fragment.isShown">
+                                <input type="text" class="form-control" ng-model="fragment.value" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group col-4" ng-show="originEnabled">
-                    <label for="selectedSeparatorControl">Separator</label>
-                    <select id="selectedSeparatorControl" name="selectedSeparatorControl" ng-model="selectedSeparator" ng-options="for value in separatorOptions" ng-show="selectedScheme.length == 0" ng-change="schemeChanged()"></select>
-                    <input type="text" id="selectedSeparatorControl" name="selectedSeparatorControl" class="form-control" readonly="readonly" ng-model="selectedSeparator" ng-hide="selectedScheme.length == 0" />
-                </div>
-            </div>
-            <div class="form-row" ng-show="originEnabled">
-                <h3>User Info<input class="form-check-input" type="checkbox" name="originCheckBox" id="originCheckBox" ng-model="enableUsername" ng-change="userInfoChanged()" /></h3>
-                <div class="form-group col-6" ng-show="enableUsername">
-                    <label for="usernameTextBox">User Name</label>
-                    <input type="text" id="usernameTextBox" name="usernameTextBox" class="form-control" ng-model="username" ng-change="userInfoChanged()" />
-                </div>
-                <div class="form-group col-6" ng-show="enableUsername">
-                    <label for="enablePasswordCheckBox">Password</label>
-                    <input class="form-check-input" type="checkbox" name="enablePasswordCheckBox" id="enablePasswordCheckBox" ng-model="enablePassword" ng-change="userInfoChanged()" />
-                    <input type="text" id="passwordTextBox" name="passwordTextBox" class="form-control" ng-show="enablePassword" ng-model="password" ng-change="userInfoChanged()" />
-                </div>
-            </div>
-            <div class="form-row" ng-show="originEnabled">
-                <h3>Host</h3>
-                <div class="form-group col-8">
-                    <label for="hostTextBox">Host Name</label>
-                    <input type="text" id="hostTextBox" name="hostTextBox" class="form-control" ng-model="host" ng-change="hostNameChanged()" />
-                </div>
-                <div class="form-group col-4">
-                    <label for="enablePortCheckBox">Port</label>
-                    <input class="form-check-input" type="checkbox" name="enablePortCheckBox" id="enablePortCheckBox" ng-model="enablePort" ng-change="portChanged()" />
-                    <input type="text" id="portTextBox" name="portTextBox" class="form-control" ng-show="enablePort" ng-model="port" ng-change="    ()" />
-                </div>
-            </div>
+            </uri-builder>
         </form>
     </section>
     <footer class="container-fluid ">&copy; Leonard T. Erwine 2019.</footer>
