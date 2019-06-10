@@ -54,7 +54,7 @@
                                             <div class="form-group col-8">
                                                 <label for="schemeNameDropdown">Scheme</label>
                                                 <select id="schemeNameDropdown" ng-model="scheme.selectedScheme">
-                                                    <option ng-repeat="item in scheme.schemeOptions" value="{{item.name}}">{{item.displayText}})</option>
+                                                    <option ng-repeat="item in scheme.schemeOptions" value="{{item.name}}">{{item.displayText}}</option>
                                                 </select>
                                                 <input type="text" id="schemeNameTextBox" name="schemeNameTextBox" class="form-control" readonly="readonly" ng-show="scheme.selectedScheme.length == 0" ng-model="scheme.otherSchemeName" />
                                             </div>

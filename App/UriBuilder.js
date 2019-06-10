@@ -354,16 +354,19 @@ var uriBuilder;
          *
          * @static
          * @param {string} scheme - The URI scheme name.
+         * @param {UriSchemeSeparator} [separator] - The URI scheme separator.
          * @returns {UriSchemeSpecification}
          * @memberof UriSchemeInfo
          */
-        static getSchemeSpecs(scheme) {
+        static getSchemeSpecs(scheme, separator) {
             if (scheme.endsWith(':'))
                 scheme = scheme.substr(0, scheme.length - 1);
             let item = UriSchemeSpecification.knownSchemes.find((value) => value.name === scheme);
-            if (typeof item !== "undefined")
+            if (typeof item === "undefined")
+                return new UriSchemeSpecification({ name: scheme, separator: separator });
+            if (typeof separator !== "string" || separator === item.separator)
                 return item;
-            return new UriSchemeSpecification({ name: scheme });
+            return new UriSchemeSpecification({ fragment: item.fragment, host: item.host, name: item.name, path: item.path, query: item.query, separator: separator, userinfo: item.userinfo });
         }
         /**
          * Gets an array of known URI scheme specifications.
@@ -655,10 +658,28 @@ var uriBuilder;
         // #endregion
         constructor($scope) {
             this.$scope = $scope;
+            this._otherSchemeName = "";
         }
         // #region Properties
         get schemeOptions() { return UriBuilderSchemeController._schemeOptions; }
         get separatorOptions() { return UriBuilderSchemeController._separatorOptions; }
+        get selectedScheme() { return this._selectedScheme; }
+        set selectedScheme(value) {
+            if (this._selectedScheme === (value = sys.asString(value)))
+                return;
+            if (value.length > 0)
+                this.$scope.uriBuilder.schemeSpecs = UriSchemeSpecification.getSchemeSpecs(value);
+            else if (this._otherSchemeName.length > 0)
+                this.$scope.uriBuilder.schemeSpecs = UriSchemeSpecification.getSchemeSpecs(this._otherSchemeName, this._selectedSeparator);
+        }
+        get otherSchemeName() { return this._otherSchemeName; }
+        set otherSchemeName(value) {
+            if (this._otherSchemeName === (value = sys.asString(value)))
+                return;
+            this._otherSchemeName = value;
+            if (this._selectedScheme.length == 0 && value.length > 0)
+                this.$scope.uriBuilder.schemeSpecs = UriSchemeSpecification.getSchemeSpecs(value, this._selectedSeparator);
+        }
         // #region Methods
         $onInit() { }
         static createDirective() {
@@ -672,10 +693,38 @@ var uriBuilder;
                 link: (scope, element, instanceAttributes, originBuilder) => {
                     scope.originBuilder = originBuilder;
                     originBuilder.onComponentChange(scope.scheme, scope.scheme.onSchemeComponentChange, UriBuilderComponentChangeArg.scheme);
+                    let schemeController = scope.scheme;
+                    let schemeSpecs = originBuilder.uriBuilder.schemeSpecs;
+                    let selectedSpecs = UriSchemeSpecification.knownSchemes.find((value) => value.name === schemeSpecs.name && value.separator === schemeSpecs.separator);
+                    if (sys.isNil(selectedSpecs)) {
+                        schemeController._selectedScheme = "";
+                        schemeController._selectedSeparator = schemeSpecs.separator;
+                        schemeController._otherSchemeName = schemeSpecs.name;
+                    }
+                    else
+                        schemeController._selectedScheme = schemeSpecs.name;
+                    schemeController._selectedSeparator = schemeSpecs.separator;
                 }
             };
         }
         onSchemeComponentChange(component, value, uriBuilder) {
+            let schemeController = this.$scope.scheme;
+            let schemeSpecs = this.$scope.uriBuilder.schemeSpecs;
+            if (this._selectedScheme.length == 0) {
+                if (schemeSpecs.name === this._otherSchemeName && schemeSpecs.separator === this._selectedSeparator)
+                    return;
+            }
+            else if (schemeSpecs.name === this._selectedScheme && schemeSpecs.separator === this._selectedSeparator)
+                return;
+            let selectedSpecs = UriSchemeSpecification.knownSchemes.find((value) => value.name === schemeSpecs.name && value.separator === schemeSpecs.separator);
+            if (sys.isNil(selectedSpecs)) {
+                schemeController._selectedScheme = "";
+                schemeController._selectedSeparator = schemeSpecs.separator;
+                schemeController._otherSchemeName = schemeSpecs.name;
+            }
+            else
+                schemeController._selectedScheme = schemeSpecs.name;
+            schemeController._selectedSeparator = schemeSpecs.separator;
         }
         static detectScheme(uriString, uriBuilder) { return getUriSchemeInfo(uriString); }
     }
@@ -833,7 +882,41 @@ var uriBuilder;
                     s = sys.asString(scope.allowsPortClass).trim();
                     if (s.length > 0)
                         hostController._allowsPortClass = s.split('/\s+');
-                    hostController.updateScheme(scope.originBuilder.uriBuilder.schemeSpecs);
+                    let scheme = scope.originBuilder.uriBuilder.schemeSpecs;
+                    hostController.updateScheme(scheme);
+                    if (scheme.host == UriComponentSupportOption.notSupported) {
+                        hostController._name = hostController._previousName = hostController._portNumber = hostController._previousPort = "";
+                        return;
+                    }
+                    let value = originBuilder.encodedHostName;
+                    if (typeof value === "string") {
+                        hostController._hasName = true;
+                        if (scheme.password === UriComponentSupportOption.notSupported)
+                            hostController._name = hostController._previousName = value;
+                        else {
+                            let index = value.indexOf(":");
+                            if (index < 0) {
+                                hostController._name = hostController._previousName = value;
+                                hostController._portNumber = hostController._previousPort = "";
+                                hostController._hasPortNumber = false;
+                            }
+                            else {
+                                hostController._name = hostController._previousName = value.substr(0, index);
+                                hostController._portNumber = hostController._previousPort = value.substr(index + 1);
+                                hostController._hasPortNumber = true;
+                            }
+                        }
+                    }
+                    else {
+                        if (scheme.host !== UriComponentSupportOption.required) {
+                            if (hostController._hasName)
+                                hostController._previousName = hostController._name;
+                            if (hostController._hasPortNumber)
+                                hostController._previousPort = hostController._portNumber;
+                            hostController._hasName = hostController._hasPortNumber = false;
+                        }
+                        hostController._name = "";
+                    }
                 }
             };
         }
