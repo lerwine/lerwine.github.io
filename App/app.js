@@ -185,7 +185,12 @@ var app;
                     if (this.$scope.links[i].pageId === pageId) {
                         this.$scope.links[i].cssClass.push("active");
                         this.$scope.links[i].href = "#";
-                        this.$scope.links[i].onClick = () => { return false; };
+                        this.$scope.links[i].onClick = (event) => {
+                            if (!sys.isNil(event)) {
+                                event.preventDefault();
+                                event.stopPropagation();
+                            }
+                        };
                         return;
                     }
                 }
@@ -199,7 +204,7 @@ var app;
         }
     }
     ;
-    app.mainModule.directive('topNavAndHeader', ['applicationConfigurationLoader', (navLoader) => {
+    app.mainModule.directive('appTopNavAndHeader', ['applicationConfigurationLoader', (navLoader) => {
             return {
                 restrict: "E",
                 scope: {},
@@ -209,7 +214,8 @@ var app;
                     navLoader.then((promiseValue) => {
                         scope.initializeTopNav(attributes.pageName, navLoader);
                     });
-                }
+                },
+                templateUrl: "Template/topNavAndHeader.htm"
             };
         }]);
 })(app || (app = {}));

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="AccordionGroup"
+    targetNamespace="https://lerwine.github.io/Schema/AccordionGroup.xsd"
+    elementFormDefault="qualified"
+    xmlns="https://lerwine.github.io/Schema/AccordionGroup.xsd"
+    xmlns:accordion-group="https://lerwine.github.io/Schema/AccordionGroup.xsd"
+    xmlns:h="http://www.w3.org/1999/xhtml"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:import namespace="http://www.w3.org/1999/xhtml" />
+    <xs:element name="container">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:attribute name="content" type="xs:string">
+        
+    </xs:attribute>
+    <xs:attribute name="toggle-on-click" type="xs:string">
+        
+    </xs:attribute>
+    <xs:element name="toggle-button">
+        <xs:complexType>
+            <xs:attribute name="item-id" type="xs:string" use="required" />
+            <xs:attribute name="class" type="xs:string" use="optional" />
+            <xs:attribute name="expanded-class" type="xs:string" use="optional" />
+            <xs:attribute name="collapsed-class" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="button-text">
+        <xs:complexType>
+            <xs:attribute name="class" type="xs:string" use="optional" />
+            <xs:attribute name="expanded-text" type="xs:string" use="required" />
+            <xs:attribute name="collapsed-text" type="xs:string" use="required" />
+            <xs:attribute name="expanded-class" type="xs:string" use="optional" />
+            <xs:attribute name="collapsed-class" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="button-image">
+        <xs:complexType>
+            <xs:attribute name="class" type="xs:string" use="optional" />
+            <xs:attribute name="expanded-src" type="xs:string" use="required" />
+            <xs:attribute name="collapsed-src" type="xs:string" use="required" />
+            <xs:attribute name="expanded-alt" type="xs:string" use="optional" />
+            <xs:attribute name="collapsed-alt" type="xs:string" use="optional" />
+            <xs:attribute name="expanded-class" type="xs:string" use="optional" />
+            <xs:attribute name="collapsed-class" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="when-button-expanded">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="when-button-collapsed">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

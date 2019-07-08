@@ -1,4 +1,4 @@
-﻿body {
+body {
     font-family: var(--font-family-sans-serif);
 }
 
@@ -82,4 +82,29 @@ section {
 footer {
     background-color: var(--secondary);
     border: 1px solid var(--secondary);
+}
+
+div.regexAlt {
+    margin-left: 8px;
+    padding-left: 0px;
+}
+ul.regexGroup li {
+    list-style-type: none;
+    white-space: nowrap;
+    margin-left: 8px;
+    padding-left: 0px;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.scrollable-tall {
+    overflow-y: auto;
+    max-height: 300px;
+}
+
+.scrollable-short {
+    overflow-y: auto;
+    max-height: 150px;
 }

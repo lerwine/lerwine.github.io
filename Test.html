@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:ng="http://angularjs.org" ng-app="mainModule">
+<html lang="en" ng-app="mainModule" xmlns:ng="http://angularjs.org" xmlns:app="https://lerwine.github.io/Schema/App.xsd" xmlns:accordion-group="https://lerwine.github.io/Schema/AccordionGroup.xsd">
 <head>
     <meta name="viewport" content="width=1024, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
@@ -16,39 +16,39 @@
     <script src="App/accordionGroup.js"></script>
 </head>
 <body>
-    <top-nav-and-header headerText="URI Builder" pageId="uriBuilder"></top-nav-and-header>
+    <app:top-nav-and-header headerText="URI Builder" pageId="uriBuilder"></app:top-nav-and-header>
     <section class="container-fluid" ng-controller="testController as tc">
-        <accordion-group>
+        <accordion-group:container>
             <div class="card">
                 <div class="card-header">
-                    <accordion-group-toggle-button class="btn btn-primary" item-id="item1"><h2><accordion-group-button-text expanded-text="Hide" collapsed-text="Show"></accordion-group-button-text> 1</h2></accordion-group-toggle-button>
+                    <accordion-group:toggle-button class="btn btn-primary" item-id="item1"><h2><accordion-group:button-text expanded-text="Hide" collapsed-text="Show"></accordion-group:button-text> 1</h2></accordion-group:toggle-button>
                 </div>
-                <div class="card-body" accordion-group-content-item="item1">
+                <div class="card-body" accordion-group:content="item1">
                     {{href}}
                 </div>
                 <div class="card-header">
-                    <accordion-group-toggle-button class="btn btn-primary" item-id="item2"><h2>2</h2></accordion-group-toggle-button>
+                    <accordion-group:toggle-button class="btn btn-primary" item-id="item2"><h2>2</h2></accordion-group:toggle-button>
                 </div>
-                <div class="card-body" accordion-group-content-item="item2">
+                <div class="card-body" accordion-group:content="item2">
                     Item 2
                     <accordion-group>
                         <div class="card">
                             <div class="card-header">
-                                <accordion-group-toggle-button class="btn btn-primary" item-id="itemA"><h2>A</h2></accordion-group-toggle-button>
+                                <accordion-group:toggle-button class="btn btn-primary" item-id="itemA"><h2>A</h2></accordion-group:toggle-button>
                             </div>
-                            <div class="card-body" accordion-group-content-item="itemA">
+                            <div class="card-body" accordion-group:content="itemA">
                                 {{href}}
                             </div>
                             <div class="card-header">
-                                <accordion-group-toggle-button class="btn btn-primary" item-id="itemB"><h2>B</h2></accordion-group-toggle-button>
+                                <accordion-group:toggle-button class="btn btn-primary" item-id="itemB"><h2>B</h2></accordion-group:toggle-button>
                             </div>
-                            <div class="card-body" accordion-group-content-item="itemB">
+                            <div class="card-body" accordion-group:content="itemB">
                                 Item B
                             </div>
                             <div class="card-header">
-                                <accordion-group-toggle-button class="btn btn-primary" item-id="itemC"><h2>C</h2></accordion-group-toggle-button>
+                                <accordion-group:toggle-button class="btn btn-primary" item-id="itemC"><h2>C</h2></accordion-group:toggle-button>
                             </div>
-                            <div class="card-body" accordion-group-content-item="itemC">
+                            <div class="card-body" accordion-group:content="itemC">
                                 Item C
                             </div>
                         </div>
@@ -57,11 +57,11 @@
                 <div class="card-header">
                     <accordion-group-toggle-button class="btn btn-primary" item-id="item3"><h2>3</h2></accordion-group-toggle-button>
                 </div>
-                <div class="card-body" accordion-group-content-item="item3">
+                <div class="card-body" accordion-group:content="item3">
                     Item 3
                 </div>
             </div>
-        </accordion-group>
+        </accordion-group:container>
     </section>
     <footer class="container-fluid ">&copy; Leonard T. Erwine 2019.</footer>
 </body>

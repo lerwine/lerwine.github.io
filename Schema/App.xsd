@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="App"
+    targetNamespace="https://lerwine.github.io/Schema/App.xsd"
+    elementFormDefault="qualified"
+    xmlns="https://lerwine.github.io/Schema/App.xsd"
+    xmlns:app="https://lerwine.github.io/Schema/App.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="top-nav-and-header">
+        <xs:complexType>
+            <xs:attribute name="header-text" type="xs:string" use="required" />
+            <xs:attribute name="page-name" type="xs:string" use="required" />
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

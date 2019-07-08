@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="RegexTester"
+    targetNamespace="https://lerwine.github.io/Schema/RegexTester.xsd"
+    elementFormDefault="qualified"
+    xmlns="https://lerwine.github.io/Schema/RegexTester.xsd"
+    xmlns:regex="https://lerwine.github.io/Schema/RegexTester.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="form">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+            <xs:attribute name="action" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

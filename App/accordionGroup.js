@@ -4,8 +4,9 @@
 var accordionGroup;
 (function (accordionGroup) {
     ;
-    // #region <accordion-group></accordion-group>
-    accordionGroup.DIRECTIVENAME_accordionGroup = "accordionGroup";
+    // #region <accordion-group:container></accordion-group:container>
+    accordionGroup.PREFIX_accordionGroup = "accordionGroup";
+    accordionGroup.DIRECTIVENAME_accordionGroupContainer = accordionGroup.PREFIX_accordionGroup + "Container";
     /**
      * Controller automatically given to the accordionGroup directive, which manages the visibility of child elements that have the accordionGroupContentItem directive.
      *
@@ -122,17 +123,17 @@ var accordionGroup;
         }
     }
     accordionGroup.AccordionGroupController = AccordionGroupController;
-    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroup, () => ({
+    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupContainer, () => ({
         restrict: "E",
         controller: ["$scope", AccordionGroupController],
         transclude: true,
         template: '<ng-transclude></ng-transclude>'
     }));
     // #endregion
-    // #region accordion-group-content-item
-    accordionGroup.DIRECTIVENAME_accordionGroupContentItem = "accordionGroupContentItem";
-    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupContentItem, () => ({
-        require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroup,
+    // #region accordion-group:content
+    accordionGroup.DIRECTIVENAME_accordionGroupContent = accordionGroup.PREFIX_accordionGroup + "Content";
+    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupContent, () => ({
+        require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroupContainer,
         restrict: "A",
         transclude: true,
         template: '<ng-transclude></ng-transclude>',
@@ -147,10 +148,10 @@ var accordionGroup;
         }
     }));
     // #endregion
-    // #region accordion-group-toggle-on-click
-    accordionGroup.DIRECTIVENAME_accordionGroupToggleOnClick = "accordionGroupToggleOnClick";
+    // #region accordion-group:toggle-on-click
+    accordionGroup.DIRECTIVENAME_accordionGroupToggleOnClick = accordionGroup.PREFIX_accordionGroup + "ToggleOnClick";
     app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupToggleOnClick, () => ({
-        require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroup,
+        require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroupContainer,
         restrict: "A",
         transclude: true,
         template: '<ng-transclude></ng-transclude>',
@@ -160,7 +161,7 @@ var accordionGroup;
     }));
     // #endregion
     // #region <accordion-group-toggle-button item-id="" expanded-class="" collapsed-class=""></accordion-group-toggle-button>
-    accordionGroup.DIRECTIVENAME_accordionGroupToggleButton = "accordionGroupToggleButton";
+    accordionGroup.DIRECTIVENAME_accordionGroupToggleButton = accordionGroup.PREFIX_accordionGroup + "ToggleButton";
     /**
      *
      *
@@ -277,7 +278,7 @@ var accordionGroup;
                 transclude: true,
                 controllerAs: "accordionGroupToggleButtonController",
                 controller: ["$scope", AccordionGroupToggleButtonController],
-                require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroup,
+                require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroupContainer,
                 scope: { itemId: "@", onAccordionItemExpanded: "&?", onAccordionItemCollapsed: "&?" },
                 link: AccordionGroupToggleButtonController.directiveLink,
                 template: '<button onclick="return false;" ng-transclude></button>'
@@ -289,7 +290,7 @@ var accordionGroup;
     app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupToggleButton, () => AccordionGroupToggleButtonController.getDirective());
     // #endregion
     // #region <accordion-group-button-text expanded-text="" collapsed-text="" expanded-class="" collapsed-class="" />
-    accordionGroup.DIRECTIVENAME_accordionGroupButtonText = "accordionGroupButtonText";
+    accordionGroup.DIRECTIVENAME_accordionGroupButtonText = accordionGroup.PREFIX_accordionGroup + "ButtonText";
     function AccordionGroupButtonTextLink(scope, element, instanceAttributes, controller) {
         let expandedClass = [];
         let collapsedClass = [];
@@ -335,9 +336,9 @@ var accordionGroup;
         template: '<span></span>'
     }));
     // #endregion
-    // #region <accordion-group-button-expanded></accordion-group-button-expanded>
-    accordionGroup.DIRECTIVENAME_accordionGroupButtonExpanded = "accordionGroupButtonExpanded";
-    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupButtonExpanded, () => ({
+    // #region <accordion-group:when-button-expanded></accordion-group:when-button-expanded>
+    accordionGroup.DIRECTIVENAME_accordionGroupWhenButtonExpanded = accordionGroup.PREFIX_accordionGroup + "WhenButtonExpanded";
+    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupWhenButtonExpanded, () => ({
         require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroupToggleButton,
         restrict: "E",
         transclude: true,
@@ -353,9 +354,9 @@ var accordionGroup;
         }
     }));
     // #endregion
-    // #region <accordion-group-button-collapsed></accordion-group-button-collapsed>
-    accordionGroup.DIRECTIVENAME_accordionGroupButtonCollapsed = "accordionGroupButtonCollapsed";
-    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupButtonCollapsed, () => ({
+    // #region <accordion-group:when-button-collapsed></accordion-group:when-button-collapsed>
+    accordionGroup.DIRECTIVENAME_accordionGroupWhenButtonCollapsed = accordionGroup.PREFIX_accordionGroup + "WhenButtonCollapsed";
+    app.mainModule.directive(accordionGroup.DIRECTIVENAME_accordionGroupWhenButtonCollapsed, () => ({
         require: "^^" + accordionGroup.DIRECTIVENAME_accordionGroupToggleButton,
         restrict: "E",
         transclude: true,
@@ -371,8 +372,8 @@ var accordionGroup;
         }
     }));
     // #endregion
-    // #region <accordion-group-button-image expanded-src="" collapsed-src="" expanded-alt="" collapsed-alt="" expanded-class="" collapsed-class=""></accordion-group-button-image>
-    accordionGroup.DIRECTIVENAME_accordionGroupButtonImage = "accordionGroupButtonImage";
+    // #region <accordion-group:button-image expanded-src="" collapsed-src="" expanded-alt="" collapsed-alt="" expanded-class="" collapsed-class=""></accordion-group:button-image>
+    accordionGroup.DIRECTIVENAME_accordionGroupButtonImage = accordionGroup.PREFIX_accordionGroup + "ButtonImage";
     function AccordionGroupButtonImageLink(scope, element, instanceAttributes, controller) {
         let expandedClass = [];
         let collapsedClass = [];

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema id="UriBuilder"
+    targetNamespace="https://lerwine.github.io/Schema/UriBuilder.xsd"
+    elementFormDefault="qualified"
+    xmlns="https://lerwine.github.io/Schema/UriBuilder.xsd"
+    xmlns:uri-builder="https://lerwine.github.io/Schema/UriBuilder.xsd"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="form">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+            <xs:attribute name="action" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="origin">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="scheme">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="user-info">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+            <xs:attribute name="no-password-class" type="xs:string" use="optional" />
+            <xs:attribute name="allows-password-class" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="host">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+            <xs:attribute name="no-port-class" type="xs:string" use="optional" />
+            <xs:attribute name="allows-port-class" type="xs:string" use="optional" />
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="path">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="query">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="fragment">
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:any />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

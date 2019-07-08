@@ -652,8 +652,9 @@ var uriBuilder;
         }
     }
     // #endregion
-    // #region uri-builder-scheme directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderScheme = "uriBuilderScheme";
+    uriBuilder_1.PREFIX_uriBuilder = "uriBuilder";
+    // #region uri-builder:scheme directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderScheme = uriBuilder_1.PREFIX_uriBuilder + "Scheme";
     class UriBuilderSchemeController {
         // #endregion
         constructor($scope) {
@@ -732,8 +733,8 @@ var uriBuilder;
     UriBuilderSchemeController._separatorOptions = ["://", ":", ":/"];
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderScheme, UriBuilderSchemeController.createDirective);
     // #endregion
-    // #region uri-builder-userinfo directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderUserInfo = "uriBuilderUserInfo";
+    // #region uri-builder:userinfo directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderUserInfo = uriBuilder_1.PREFIX_uriBuilder + "UserInfo";
     class UriBuilderUserInfoController {
         // #region Properties
         // #endregion
@@ -765,8 +766,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderUserInfo, UriBuilderUserInfoController.createDirective);
     // #endregion
-    // #region uri-builder-host directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderHost = "uriBuilderHost";
+    // #region uri-builder:host directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderHost = uriBuilder_1.PREFIX_uriBuilder + "Host";
     class UriBuilderHostController {
         // #endregion
         // #region Methods
@@ -998,8 +999,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderHost, UriBuilderHostController.createDirective);
     // #endregion noPortClass="" allowsPortClass
-    // #region uri-builder-path directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderPath = "uriBuilderPath";
+    // #region uri-builder:path directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderPath = uriBuilder_1.PREFIX_uriBuilder + "Path";
     class UriBuilderPathController {
         // #region Properties
         // #endregion
@@ -1010,7 +1011,7 @@ var uriBuilder;
         $onInit() { }
         static createDirective() {
             return {
-                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilder,
+                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilderForm,
                 restrict: "E",
                 controllerAs: "pathBuilder",
                 controller: ["$scope", UriBuilderPathController],
@@ -1038,8 +1039,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderPath, UriBuilderPathController.createDirective);
     // #endregion
-    // #region uri-builder-query directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderQuery = "uriBuilderQuery";
+    // #region uri-builder:query directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderQuery = uriBuilder_1.PREFIX_uriBuilder + "Query";
     class UriBuilderQueryController {
         // #region Properties
         // #endregion
@@ -1048,21 +1049,21 @@ var uriBuilder;
         }
         // #region Methods
         $onInit() { }
-        static parseQuery(uriString, uriBuilder) {
+        static parseQuery(uriString, uriBuilderController) {
             let index = uriString.indexOf("?");
             if (index >= 0) {
-                uriBuilder.encodedQueryString = uriString.substr(index + 1);
+                uriBuilderController.encodedQueryString = uriString.substr(index + 1);
                 return uriString.substr(0, index);
             }
-            if (uriBuilder.schemeSpecs.query === UriComponentSupportOption.required)
-                uriBuilder.encodedQueryString = "";
+            if (uriBuilderController.schemeSpecs.query === UriComponentSupportOption.required)
+                uriBuilderController.encodedQueryString = "";
             else
-                uriBuilder.encodedQueryString = null;
+                uriBuilderController.encodedQueryString = null;
             return uriString;
         }
         static createDirective() {
             return {
-                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilder,
+                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilderForm,
                 restrict: "E",
                 controllerAs: "queryBuilder",
                 controller: ["$scope", UriBuilderQueryController],
@@ -1090,8 +1091,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderQuery, UriBuilderQueryController.createDirective);
     // #endregion
-    // #region uri-builder-fragment directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderFragment = "uriBuilderFragment";
+    // #region uri-builder:fragment directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderFragment = uriBuilder_1.PREFIX_uriBuilder + "Fragment";
     class UriBuilderFragmentController {
         // #region Properties
         // #endregion
@@ -1100,35 +1101,35 @@ var uriBuilder;
         }
         // #region Methods
         $onInit() { }
-        static parseFragment(uriString, uriBuilder) {
+        static parseFragment(uriString, uriBuilderController) {
             let index = uriString.indexOf("#");
             if (index >= 0) {
-                uriBuilder.encodedFragment = uriString.substr(index + 1);
+                uriBuilderController.encodedFragment = uriString.substr(index + 1);
                 return uriString.substr(0, index);
             }
-            if (uriBuilder.schemeSpecs.fragment === UriComponentSupportOption.required)
-                uriBuilder.encodedFragment = "";
+            if (uriBuilderController.schemeSpecs.fragment === UriComponentSupportOption.required)
+                uriBuilderController.encodedFragment = "";
             else
-                uriBuilder.encodedFragment = null;
+                uriBuilderController.encodedFragment = null;
             return uriString;
         }
         static createDirective() {
             return {
-                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilder,
+                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilderForm,
                 restrict: "E",
                 controllerAs: "fragmentBuilder",
                 controller: ["$scope", UriBuilderFragmentController],
                 transclude: true,
                 template: '<ng-transclude></ng-transclude>',
-                link: (scope, element, instanceAttributes, uriBuilder) => {
-                    scope.uriBuilder = uriBuilder;
-                    uriBuilder.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => {
+                link: (scope, element, instanceAttributes, uriBuilderController) => {
+                    scope.uriBuilder = uriBuilderController;
+                    uriBuilderController.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => {
                         if (isEditingEncodedUriString)
                             element.hide();
-                        else if (uriBuilder.isAbsoluteUri)
+                        else if (uriBuilderController.isAbsoluteUri)
                             element.show();
                     });
-                    uriBuilder.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => {
+                    uriBuilderController.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => {
                         if (!isEditingEncodedUriString)
                             return;
                         if (isAbsoluteUri)
@@ -1142,8 +1143,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderFragment, UriBuilderFragmentController.createDirective);
     // #endregion
-    // #region uri-builder-origin directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilderOrigin = "uriBuilderOrigin";
+    // #region uri-builder:origin directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderOrigin = uriBuilder_1.PREFIX_uriBuilder + "Origin";
     class UriBuilderOriginController {
         // #endregion
         constructor($scope, $log) {
@@ -1164,7 +1165,7 @@ var uriBuilder;
             if (this._encodedUserName === (value = sys.asStringOrNull(value)))
                 return;
             this._encodedUserName = value;
-            this.$scope.uriBuilder.encodedUserInfo = (typeof this._encodedUserName !== "string" || this._encodedPassword !== "string") ? this._encodedUserName : this._encodedUserName + ":" + this._encodedPassword;
+            this.$scope.encodedUserInfo = (typeof this._encodedUserName !== "string" || this._encodedPassword !== "string") ? this._encodedUserName : this._encodedUserName + ":" + this._encodedPassword;
             this._changeManager.raiseChange(UriBuilderComponentChangeArg.username, value);
         }
         get encodedPassword() { return this._encodedPassword; }
@@ -1195,21 +1196,21 @@ var uriBuilder;
         // #region Methods
         static createDirective() {
             return {
-                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilder,
+                require: "^^" + uriBuilder_1.DIRECTIVENAME_uriBuilderForm,
                 restrict: "E",
                 controllerAs: "originBuilder",
                 controller: ["$scope", "$log", UriBuilderOriginController],
                 transclude: true,
                 template: '<ng-transclude></ng-transclude>',
-                link: (scope, element, instanceAttributes, uriBuilder) => {
-                    scope.uriBuilder = uriBuilder;
-                    uriBuilder.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => {
+                link: (scope, element, instanceAttributes, uriBuilderController) => {
+                    scope.uriBuilder = uriBuilderController;
+                    uriBuilderController.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => {
                         if (isEditingEncodedUriString)
                             element.hide();
-                        else if (uriBuilder.isAbsoluteUri)
+                        else if (uriBuilderController.isAbsoluteUri)
                             element.show();
                     });
-                    uriBuilder.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => {
+                    uriBuilderController.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => {
                         if (!isEditingEncodedUriString)
                             return;
                         if (isAbsoluteUri)
@@ -1218,11 +1219,11 @@ var uriBuilder;
                             element.hide();
                     });
                     let originBuilder = scope.originBuilder;
-                    uriBuilder.onComponentChange(originBuilder, originBuilder.onSchemeComponentChange, UriBuilderComponentChangeArg.scheme);
-                    uriBuilder.onComponentChange(originBuilder, originBuilder.onUserInfoComponentChange, UriBuilderComponentChangeArg.userinfo);
-                    uriBuilder.onComponentChange(originBuilder, originBuilder.onHostComponentChange, UriBuilderComponentChangeArg.host);
-                    uriBuilder.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => originBuilder.onIsEditingEncodedUriStringChanged(isEditingEncodedUriString, encodedUriString));
-                    uriBuilder.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => originBuilder.onIsAbsoluteUriChanged(isAbsoluteUri, isEditingEncodedUriString));
+                    uriBuilderController.onComponentChange(originBuilder, originBuilder.onSchemeComponentChange, UriBuilderComponentChangeArg.scheme);
+                    uriBuilderController.onComponentChange(originBuilder, originBuilder.onUserInfoComponentChange, UriBuilderComponentChangeArg.userinfo);
+                    uriBuilderController.onComponentChange(originBuilder, originBuilder.onHostComponentChange, UriBuilderComponentChangeArg.host);
+                    uriBuilderController.onIsEditingEncodedUriStringChanged((isEditingEncodedUriString, encodedUriString) => originBuilder.onIsEditingEncodedUriStringChanged(isEditingEncodedUriString, encodedUriString));
+                    uriBuilderController.onIsAbsoluteUriChanged((isAbsoluteUri, isEditingEncodedUriString) => originBuilder.onIsAbsoluteUriChanged(isAbsoluteUri, isEditingEncodedUriString));
                 }
             };
         }
@@ -1238,79 +1239,79 @@ var uriBuilder;
                     this._onEncodedComponentChanged.push([c, callback, thisArg]);
             });
         }
-        static parseOrigin(uriString, uriBuilder) {
-            if (uriBuilder.isRelativeUri) {
-                uriBuilder.encodedUserInfo = uriBuilder.encodedHost = null;
+        static parseOrigin(uriString, uriBuilderController) {
+            if (uriBuilderController.isRelativeUri) {
+                uriBuilderController.encodedUserInfo = uriBuilderController.encodedHost = null;
                 return uriString;
             }
-            let s = uriBuilder.schemeSpecs.name + uriBuilder.schemeSpecs.separator;
+            let s = uriBuilderController.schemeSpecs.name + uriBuilderController.schemeSpecs.separator;
             if (uriString.startsWith(s))
                 uriString = uriString.substr(s.length);
             let m;
-            if (uriBuilder.schemeSpecs.username == UriComponentSupportOption.notSupported)
-                uriBuilder.encodedUserInfo = null;
-            else if (uriBuilder.schemeSpecs.password == UriComponentSupportOption.notSupported) {
+            if (uriBuilderController.schemeSpecs.username == UriComponentSupportOption.notSupported)
+                uriBuilderController.encodedUserInfo = null;
+            else if (uriBuilderController.schemeSpecs.password == UriComponentSupportOption.notSupported) {
                 m = uriBuilder_1.userNameParseRe.exec(uriString);
                 if (sys.isNilOrEmpty(m)) {
-                    if (uriBuilder.schemeSpecs.username == UriComponentSupportOption.required)
-                        uriBuilder.encodedUserInfo = "";
+                    if (uriBuilderController.schemeSpecs.username == UriComponentSupportOption.required)
+                        uriBuilderController.encodedUserInfo = "";
                     else
-                        uriBuilder.encodedUserInfo = null;
+                        uriBuilderController.encodedUserInfo = null;
                 }
                 else {
-                    uriBuilder.encodedUserInfo = m[1];
+                    uriBuilderController.encodedUserInfo = m[1];
                     uriString = uriString.substr(m[0].length);
                 }
             }
             else {
                 m = uriBuilder_1.userPwParseRe.exec(uriString);
                 if (sys.isNilOrEmpty(m)) {
-                    if (uriBuilder.schemeSpecs.username == UriComponentSupportOption.required)
-                        uriBuilder.encodedUserInfo = (uriBuilder.schemeSpecs.password == UriComponentSupportOption.required) ? ":" : "";
+                    if (uriBuilderController.schemeSpecs.username == UriComponentSupportOption.required)
+                        uriBuilderController.encodedUserInfo = (uriBuilderController.schemeSpecs.password == UriComponentSupportOption.required) ? ":" : "";
                     else
-                        uriBuilder.encodedUserInfo = null;
+                        uriBuilderController.encodedUserInfo = null;
                 }
                 else {
-                    uriBuilder.encodedUserInfo = (sys.isNil(m[3]) && uriBuilder.schemeSpecs.password == UriComponentSupportOption.required) ? m[1] + ":" : m[1];
+                    uriBuilderController.encodedUserInfo = (sys.isNil(m[3]) && uriBuilderController.schemeSpecs.password == UriComponentSupportOption.required) ? m[1] + ":" : m[1];
                     uriString = uriString.substr(m[0].length);
                 }
             }
-            if (uriBuilder.schemeSpecs.hostname === UriComponentSupportOption.notSupported)
-                uriBuilder.encodedHost = null;
-            else if (uriBuilder.schemeSpecs.port === UriComponentSupportOption.notSupported) {
+            if (uriBuilderController.schemeSpecs.hostname === UriComponentSupportOption.notSupported)
+                uriBuilderController.encodedHost = null;
+            else if (uriBuilderController.schemeSpecs.port === UriComponentSupportOption.notSupported) {
                 m = uriBuilder_1.hostNameParseRe.exec(uriString);
                 if (sys.isNilOrEmpty(m)) {
-                    if (uriBuilder.schemeSpecs.hostname === UriComponentSupportOption.required)
-                        uriBuilder.encodedHost = "";
+                    if (uriBuilderController.schemeSpecs.hostname === UriComponentSupportOption.required)
+                        uriBuilderController.encodedHost = "";
                     else
-                        uriBuilder.encodedHost = null;
+                        uriBuilderController.encodedHost = null;
                 }
                 else {
-                    uriBuilder.encodedHost = m[0];
+                    uriBuilderController.encodedHost = m[0];
                     return uriString.substr(m[0].length);
                 }
             }
             else {
                 m = uriBuilder_1.hostPortParseRe.exec(uriString);
                 if (sys.isNilOrEmpty(m)) {
-                    if (uriBuilder.schemeSpecs.host === UriComponentSupportOption.required)
-                        uriBuilder.encodedHost = (uriBuilder.schemeSpecs.port === UriComponentSupportOption.required) ? ((isNaN(uriBuilder.schemeSpecs.defaultPort)) ? ":" : ":" + uriBuilder.schemeSpecs.defaultPort.toString()) : "";
+                    if (uriBuilderController.schemeSpecs.host === UriComponentSupportOption.required)
+                        uriBuilderController.encodedHost = (uriBuilderController.schemeSpecs.port === UriComponentSupportOption.required) ? ((isNaN(uriBuilderController.schemeSpecs.defaultPort)) ? ":" : ":" + uriBuilderController.schemeSpecs.defaultPort.toString()) : "";
                     else
-                        uriBuilder.encodedHost = null;
+                        uriBuilderController.encodedHost = null;
                 }
                 else {
-                    uriBuilder.encodedHost = (sys.isNil(m[2]) && uriBuilder.schemeSpecs.host === UriComponentSupportOption.required) ? m[1] + ((isNaN(uriBuilder.schemeSpecs.defaultPort)) ? ":" : ":" + uriBuilder.schemeSpecs.defaultPort.toString()) : m[0];
+                    uriBuilderController.encodedHost = (sys.isNil(m[2]) && uriBuilderController.schemeSpecs.host === UriComponentSupportOption.required) ? m[1] + ((isNaN(uriBuilderController.schemeSpecs.defaultPort)) ? ":" : ":" + uriBuilderController.schemeSpecs.defaultPort.toString()) : m[0];
                     return uriString.substr(m[0].length);
                 }
             }
             return uriString;
         }
-        onSchemeComponentChange(component, value, uriBuilder) { this._changeManager.raiseChange(component, value); }
-        onUserInfoComponentChange(component, value, uriBuilder) {
+        onSchemeComponentChange(component, value, uriBuilderController) { this._changeManager.raiseChange(component, value); }
+        onUserInfoComponentChange(component, value, uriBuilderController) {
             this._changeManager.doChange(() => {
                 if (sys.isNil(value))
                     this.encodedUserName = this.encodedPassword = null;
-                else if (uriBuilder.schemeSpecs.password === UriComponentSupportOption.notSupported) {
+                else if (uriBuilderController.schemeSpecs.password === UriComponentSupportOption.notSupported) {
                     this.encodedUserName = value;
                     this.encodedPassword = null;
                 }
@@ -1327,11 +1328,11 @@ var uriBuilder;
                 }
             }, this);
         }
-        onHostComponentChange(component, value, uriBuilder) {
+        onHostComponentChange(component, value, uriBuilderController) {
             this._changeManager.doChange(() => {
                 if (sys.isNil(value))
                     this.encodedHostName = this.encodedPortNumber = null;
-                else if (uriBuilder.schemeSpecs.port === UriComponentSupportOption.notSupported) {
+                else if (uriBuilderController.schemeSpecs.port === UriComponentSupportOption.notSupported) {
                     this.encodedHostName = value;
                     this.encodedPortNumber = null;
                 }
@@ -1355,8 +1356,8 @@ var uriBuilder;
     }
     app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderOrigin, UriBuilderOriginController.createDirective);
     // #endregion
-    // #region uri-builder element directive
-    uriBuilder_1.DIRECTIVENAME_uriBuilder = "uriBuilder";
+    // #region uri-builder:form element directive
+    uriBuilder_1.DIRECTIVENAME_uriBuilderForm = uriBuilder_1.PREFIX_uriBuilder + "Form";
     let UriBuilderComponentChangeArg;
     (function (UriBuilderComponentChangeArg) {
         UriBuilderComponentChangeArg[UriBuilderComponentChangeArg["uriString"] = 0] = "uriString";
@@ -1395,6 +1396,7 @@ var uriBuilder;
             }, this);
         }
         // #region Properties
+        get action() { return this._action; }
         get encodedUriString() { return this._encodedUriString; }
         set encodedUriString(value) {
             if (this._encodedUriString === (value = sys.asString(value)))
@@ -1535,18 +1537,26 @@ var uriBuilder;
         }
         showUriComponents() { this.isEditingUriComponents = true; }
         showEncodedUriString() { this.isEditingEncodedUriString = true; }
+        initialize(action) {
+            this._action = (typeof action === "string" && (action = action.trim()).length > 0) ? action : "UriBuilder.html";
+        }
         $onInit() { }
+        static link(scope, element, attr, controller) {
+            scope.uriBuilder.initialize(attr.action);
+        }
         static createDirective() {
             return {
                 restrict: "E",
                 controllerAs: "uriBuilder",
                 controller: ["$scope", "$log", UriBuilderController],
                 transclude: true,
-                template: '<ng-transclude></ng-transclude>'
+                replace: true,
+                template: '<form action="{{uriBuilder.action}}" method="get"><ng-transclude></ng-transclude></form>',
+                link: UriBuilderController.link
             };
         }
     }
-    app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilder, UriBuilderController.createDirective);
+    app.mainModule.directive(uriBuilder_1.DIRECTIVENAME_uriBuilderForm, UriBuilderController.createDirective);
     // #endregion
 })(uriBuilder || (uriBuilder = {}));
 //# sourceMappingURL=UriBuilder.js.map

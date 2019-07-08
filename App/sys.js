@@ -8,6 +8,7 @@
  */
 var sys;
 (function (sys) {
+    sys.whitespaceRe = /[\s\r\n]+/g;
     /**
      *
      *
@@ -231,11 +232,11 @@ var sys;
     }
     sys.asBooleanOrNullOrUndefined = asBooleanOrNullOrUndefined;
     /**
-     *
+     * Converts a value to a boolean value.
      *
      * @export
      * @param {(any | null | undefined)} value
-     * @param {boolean} [defaultValue=""]
+     * @param {boolean} [defaultValue=false]
      * @returns {boolean}
      */
     function asBoolean(value, defaultValue = false) {
@@ -243,6 +244,45 @@ var sys;
         return (typeof (value) === "boolean") ? value : defaultValue;
     }
     sys.asBoolean = asBoolean;
+    function testBooleanChange(currentValue, newValue, arg2, arg3, arg4, arg5) {
+        let n;
+        if (typeof arg2 === "boolean") {
+            if (asBoolean(currentValue, arg2) === (n = asBoolean(newValue, arg2))) {
+                if (typeof arg4 === "function") {
+                    if (arguments.length > 5)
+                        arg4.call(arg5, n);
+                    else
+                        arg4(n);
+                }
+                return false;
+            }
+            if (arguments.length > 5)
+                arg3.call(arg5, n);
+            else if (arguments.length > 4 && typeof arg4 !== "function")
+                arg3.call(arg4, n);
+            else
+                arg3(n);
+        }
+        else {
+            if (asBoolean(currentValue, false) === (n = asBoolean(newValue, false))) {
+                if (typeof arg3 === "function") {
+                    if (arguments.length > 4)
+                        arg3.call(arg4, n);
+                    else
+                        arg3(n);
+                }
+                return false;
+            }
+            if (arguments.length > 4)
+                arg2.call(arg4, n);
+            else if (arguments.length == 4 && typeof arg3 !== "function")
+                arg2.call(arg3, n);
+            else
+                arg2(n);
+        }
+        return true;
+    }
+    sys.testBooleanChange = testBooleanChange;
     /**
      *
      *
@@ -410,6 +450,45 @@ var sys;
         return defaultValue;
     }
     sys.asStringAndNotWhiteSpace = asStringAndNotWhiteSpace;
+    function testStringChange(currentValue, newValue, arg2, arg3, arg4, arg5) {
+        let n, o;
+        if (typeof arg2 === "string") {
+            if ((o = asString(currentValue, arg2)) === (n = asString(newValue, arg2))) {
+                if (typeof arg4 === "function") {
+                    if (arguments.length > 5)
+                        arg4.call(arg5, n);
+                    else
+                        arg4(n);
+                }
+                return false;
+            }
+            if (arguments.length > 5)
+                arg3.call(arg5, n, o);
+            else if (arguments.length > 4 && typeof arg4 !== "function")
+                arg3.call(arg4, n, o);
+            else
+                arg3(n, o);
+        }
+        else {
+            if ((o = asString(currentValue, "")) === (n = asString(newValue, ""))) {
+                if (typeof arg3 === "function") {
+                    if (arguments.length > 4)
+                        arg3.call(arg4, n);
+                    else
+                        arg3(n);
+                }
+                return false;
+            }
+            if (arguments.length > 4)
+                arg2.call(arg4, n, o);
+            else if (arguments.length == 4 && typeof arg3 !== "function")
+                arg2.call(arg3, n, o);
+            else
+                arg2(n, o);
+        }
+        return true;
+    }
+    sys.testStringChange = testStringChange;
     function asUndefinedOrNotEmpty(value, trim) {
         if (typeof (value) !== 'undefined' && value !== null && value.length > 0)
             return (trim === true && typeof (value) === 'string') ? value.trim() : value;
@@ -535,7 +614,7 @@ var sys;
      * @template TSource
      * @template TResult
      * @param {Iterable<TSource>} source
-     * @param {(value: TSource, index: number, iterable: Iterable<TSource>) => TResult} callbackfn
+     * @param {IIterableItemTranslateFn<TSource, TResult>} callbackfn
      * @param {*} [thisArg]
      * @returns {TResult[]}
      */
@@ -543,15 +622,15 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = [];
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                result.push(callbackfn.call(thisArg, r.value, index++, source));
+                result.push(callbackfn.call(thisArg, r.value, ++index, source));
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                result.push(callbackfn(r.value, index++, source));
+                result.push(callbackfn(r.value, ++index, source));
                 r = iterator.next();
             }
         return result;
@@ -563,23 +642,23 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {boolean}
      */
     function every(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (!callbackfn.call(thisArg, r.value, index++, source))
+                if (!callbackfn.call(thisArg, r.value, ++index, source))
                     return false;
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (!callbackfn(r.value, index++, source))
+                if (!callbackfn(r.value, ++index, source))
                     return false;
                 r = iterator.next();
             }
@@ -592,23 +671,23 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {boolean}
      */
     function some(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (callbackfn.call(thisArg, r.value, index++, source))
+                if (callbackfn.call(thisArg, r.value, ++index, source))
                     return true;
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (callbackfn(r.value, index++, source))
+                if (callbackfn(r.value, ++index, source))
                     return true;
                 r = iterator.next();
             }
@@ -627,15 +706,15 @@ var sys;
     function forEach(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                callbackfn.call(thisArg, r.value, index++, source);
+                callbackfn.call(thisArg, r.value, ++index, source);
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                callbackfn(r.value, index++, source);
+                callbackfn(r.value, ++index, source);
                 r = iterator.next();
             }
     }
@@ -646,7 +725,7 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {T[]}
      */
@@ -654,16 +733,16 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = [];
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (callbackfn.call(thisArg, r.value, index++, source))
+                if (callbackfn.call(thisArg, r.value, ++index, source))
                     result.push(r.value);
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (callbackfn(r.value, index++, source))
+                if (callbackfn(r.value, ++index, source))
                     result.push(r.value);
                 r = iterator.next();
             }
@@ -677,7 +756,7 @@ var sys;
      * @template TSource
      * @template TResult
      * @param {Iterable<TSource>} source
-     * @param {(previousValue: TResult, currentValue: TSource, currentIndex: number, iterable: Iterable<TSource>) => TResult} callbackfn
+     * @param {IIterableItemMergeFn<TSource, TResult>} callbackfn
      * @param {TResult} initialValue
      * @returns {TResult}
      */
@@ -685,40 +764,116 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = initialValue;
-        let index = 0;
+        let index = -1;
         while (!r.done) {
-            result = callbackfn(result, r.value, index++, source);
+            result = callbackfn(result, r.value, ++index, source);
             r = iterator.next();
         }
         return result;
     }
     sys.reduce = reduce;
-    /**
-     *
-     *
-     * @export
-     * @template T
-     * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
-     * @param {*} [thisArg]
-     * @returns {(T | undefined)}
-     */
-    function first(source, callbackfn, thisArg) {
+    function findFirstOrDefault(source, testCallbackFn, onMatchCallback, noMatchCallback, thisArg) {
+        if (isNil(source))
+            return (arguments.length > 4) ? noMatchCallback.call(thisArg, source) : noMatchCallback(source);
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
-        let index = 0;
-        if (typeof (thisArg) !== 'undefined')
+        let index = -1;
+        if (arguments.length > 4) {
             while (!r.done) {
-                if (callbackfn.call(thisArg, r.value, index++, source))
+                if (testCallbackFn.call(thisArg, r.value, ++index, source))
+                    return onMatchCallback(r.value, index, source);
+                r = iterator.next();
+            }
+            return noMatchCallback.call(thisArg, source);
+        }
+        while (!r.done) {
+            if (testCallbackFn(r.value, ++index, source))
+                return onMatchCallback(r.value, index, source);
+            r = iterator.next();
+        }
+        return noMatchCallback(source);
+    }
+    sys.findFirstOrDefault = findFirstOrDefault;
+    function findFirst(source, testCallbackFn, onMatchCallback, thisArg) {
+        if (!isNil(source)) {
+            let iterator = source[Symbol.iterator]();
+            let r = iterator.next();
+            let index = -1;
+            if (arguments.length > 2)
+                while (!r.done) {
+                    if (testCallbackFn.call(thisArg, r.value, ++index, source))
+                        return onMatchCallback(r.value, index, source);
+                    r = iterator.next();
+                }
+            else
+                while (!r.done) {
+                    if (testCallbackFn(r.value, ++index, source))
+                        return onMatchCallback(r.value, index, source);
+                    r = iterator.next();
+                }
+        }
+    }
+    sys.findFirst = findFirst;
+    /**
+     * Iterates through the list to get the first matching item or returns a default value.
+     *
+     * @export
+     * @template T - Type of element.
+     * @param {Iterable<T>} source - The iterable object to search.
+     * @param {IIterableItemTranslateFn<T, boolean>} testCallbackFn - The predicate function which determines whether the item is a match.
+     * @param {T} defaultValue - The default value to return if no match is found.
+     * @param {*} [thisArg] - The object to be used as the current "this" object.
+     * @returns {T} - The matching object or the default value if no match was found.
+     */
+    function firstOrDefault(source, testCallbackFn, defaultValue, thisArg) {
+        if (isNil(source))
+            return defaultValue;
+        let iterator = source[Symbol.iterator]();
+        let r = iterator.next();
+        let index = -1;
+        if (arguments.length > 3)
+            while (!r.done) {
+                if (testCallbackFn.call(thisArg, r.value, ++index, source))
                     return r.value;
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (callbackfn(r.value, index, source))
+                if (testCallbackFn(r.value, ++index, source))
                     return r.value;
                 r = iterator.next();
             }
+        return defaultValue;
+    }
+    sys.firstOrDefault = firstOrDefault;
+    /**
+     * Iterates through the list to get the first matching item.
+     *
+     * @export
+     * @template T - Type of element.
+     * @param {Iterable<T>} source - The iterable object to search.
+     * @param {IIterableItemTranslateFn<T, boolean>} testCallbackFn - The predicate function which determines whether the item is a match.
+     * @param {*} [thisArg] - The object to be used as the current "this" object.
+     * @returns {(T | undefined)} - The matching object or undefined if no match was found.
+     */
+    function first(source, testCallbackFn, thisArg) {
+        if (!isNil(source)) {
+            let iterator = source[Symbol.iterator]();
+            let r = iterator.next();
+            let index = -1;
+            if (arguments.length > 2)
+                while (!r.done) {
+                    if (testCallbackFn.call(thisArg, r.value, ++index, source))
+                        return r.value;
+                    r = iterator.next();
+                }
+            else
+                while (!r.done) {
+                    if (testCallbackFn(r.value, ++index, source))
+                        return r.value;
+                    r = iterator.next();
+                }
+        }
     }
     sys.first = first;
     /**
@@ -727,26 +882,27 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {number}
      */
     function indexOf(source, callbackfn, thisArg) {
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (callbackfn.call(thisArg, r.value, index++, source))
+                if (callbackfn.call(thisArg, r.value, ++index, source))
                     return index;
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (callbackfn(r.value, index, source))
+                if (callbackfn(r.value, ++index, source))
                     return index;
                 r = iterator.next();
             }
+        return -1;
     }
     sys.indexOf = indexOf;
     /**
@@ -755,7 +911,7 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {(T | undefined)}
      */
@@ -763,16 +919,16 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result;
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (callbackfn.call(thisArg, r.value, index++, source))
+                if (callbackfn.call(thisArg, r.value, ++index, source))
                     result = r.value;
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (callbackfn(r.value, index++, source))
+                if (callbackfn(r.value, ++index, source))
                     result = r.value;
                 r = iterator.next();
             }
@@ -809,7 +965,7 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {T[]}
      */
@@ -817,17 +973,17 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = [];
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (!callbackfn.call(thisArg, r.value, index++, source))
+                if (!callbackfn.call(thisArg, r.value, ++index, source))
                     break;
                 result.push(r.value);
                 r = iterator.next();
             }
         else
             while (!r.done) {
-                if (!callbackfn(r.value, index++, source))
+                if (!callbackfn(r.value, ++index, source))
                     break;
                 result.push(r.value);
                 r = iterator.next();
@@ -848,9 +1004,9 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = [];
-        let index = 0;
+        let index = -1;
         while (!r.done) {
-            if (index == count) {
+            if (++index == count) {
                 do {
                     result.push(r.value);
                     r = iterator.next();
@@ -858,7 +1014,6 @@ var sys;
                 return result;
             }
             r = iterator.next();
-            index++;
         }
         return result;
     }
@@ -869,7 +1024,7 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(value: T, index: number, iterable: Iterable<T>) => boolean} callbackfn
+     * @param {IIterableItemTranslateFn<T, boolean>} callbackfn
      * @param {*} [thisArg]
      * @returns {T[]}
      */
@@ -877,10 +1032,10 @@ var sys;
         let iterator = source[Symbol.iterator]();
         let r = iterator.next();
         let result = [];
-        let index = 0;
+        let index = -1;
         if (typeof (thisArg) !== 'undefined')
             while (!r.done) {
-                if (!callbackfn.call(thisArg, r.value, index++, source)) {
+                if (!callbackfn.call(thisArg, r.value, ++index, source)) {
                     do {
                         result.push(r.value);
                         r = iterator.next();
@@ -891,7 +1046,7 @@ var sys;
             }
         else
             while (!r.done) {
-                if (!callbackfn(r.value, index++, source)) {
+                if (!callbackfn(r.value, ++index, source)) {
                     do {
                         result.push(r.value);
                         r = iterator.next();
@@ -909,7 +1064,7 @@ var sys;
      * @export
      * @template T
      * @param {Iterable<T>} source
-     * @param {(x: T, y: T) => boolean} [callbackfn]
+     * @param {IValueMergeFn<T, T, boolean>} [callbackfn]
      * @param {*} [thisArg]
      * @returns {T[]}
      */
