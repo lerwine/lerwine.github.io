@@ -18,191 +18,172 @@
 </head>
 <body ng-app="mainModule">
     <app:top-nav-and-header header-text="Regular Expression Tester" page-id="regexTester"></app:top-nav-and-header>
-    <section class="container-fluid">
-        <form action="RegexTester.html" ng-controller="regexTesterController">
-            <div class="form-group">
-                <h3 ng-hide="isEditingPattern">Regular Expression</h3>
-                <div class="text-dark" ng-hide="isEditingPattern">
-                    {{patternDisplayText}}
-                    <a href="#" ng-click="regexTester.editPattern($event)" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/pencil.svg" width="12" height="12" alt="Edit Pattern" /></a>
-                </div>
-                <label ng-show="isEditingPattern" for="{{patternTextBoxLabelId}}">Regular Expression</label>
-                <div class="input-group" ng-show="isEditingPattern">
-                    <div class="input-group-prepend"><div class="container-fluid"><div class="input-group-text">/</div></div></div>
-                    <input type="text" class="form-control" id="{{singleLinePatternTextBoxId}}" ng-show="isShowingSingleLinePatternEdit" ng-model="singleLinePatternText" ng-trim="false" />
-                    <text-edit-control textbox-id="{{multiLinePatternTextBoxId}}" ng-show="isShowingMultiLinePatternEdit" model="multiLinePatternText" rows-expr="multiLineRowCount" ng-trim="false"></text-edit-control>
-                    <div class="input-group-append">
-                        <div class="container-fluid">
-                            <div><button class="btn btn-dark" ng-click="regexTester.openOptionsDialog($event)">/{{flags}}</button></div>
-                            <div><button class="btn btn-primary" ng-click="regexTester.removePatternRow($event)" ng-show="canRemovePatternRow"><img src="./images/dave-gandy/chevron-up.svg" width="16" height="16" alt="Remove Row" /></button></div>
-                            <div><button class="btn btn-primary" ng-click="regexTester.addPatternRow($event)" ng-show="canAddPatternRow"><img src="./images/dave-gandy/thin-arrowheads-pointing-down.svg" width="16" height="16" alt="Add Row" /></button></div>
-                        </div>
+    <section class="container-fluid" ng-controller="regexTester">
+        <form action="RegexTester.html">
+            <regex-pattern class="form-group" regex="regex" is-edit-mode="isEditingPattern">
+                <div ng-hide="isEditMode">
+                    <div class="text-dark" ng-hide="isEditingPattern">
+                        <h3>Regular Expression</h3>
+                        {{patternDisplayText}}
+                        <a href="#" ng-click="regexPattern.editPattern($event)" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/pencil.svg" width="12" height="12" alt="Edit Pattern" /></a>
                     </div>
                 </div>
-                <div class="alert-danger alert-warning" ng-show="hasErrorMessage">
-                    <strong ng-show="hasErrorName">{{patternErrorName}}: </strong>{{patternErrorMessage}}
-                    <div class="small pre-scrollable" ng-show="hasErrorDetail">{{patternErrorDetail}}</div>
-                </div>
-                <div class="modal fade" id="patternOptionsModal" tabindex="-1" role="dialog" aria-labelledby="patternOptionsLabel" aria-hidden="true">
-                    <div class="modal-dialog" role="document">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="patternOptionsLabel">Pattern Options</h5>
-                                <button type="button" class="close" aria-label="Close" ng-click="regexTester.closeOptionsDialog($event)"><span aria-hidden="true">&times;</span></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="container-fluid flex-nowrap">
-                                    <div class="form-row">
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="ignoreWhitespace" id="ignoreWhitespaceCheckBox" />
-                                            <label class="form-check-label" for="ignoreWhitespaceCheckBox">Ignore Whitespace</label>
-                                        </div>
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="global" id="globalCheckBox" />
-                                            <label class="form-check-label" for="globalCheckBox">Global</label>
-                                        </div>
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="ignoreCase" id="ignoreCaseCheckBox" />
-                                            <label class="form-check-label" for="ignoreCaseCheckBox">Ignore Case</label>
-                                        </div>
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="multiline" id="multilineCheckBox" />
-                                            <label class="form-check-label" for="multilineCheckBox">Multi-Line</label>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="sticky" id="stickyCheckBox" />
-                                            <label class="form-check-label" for="stickyCheckBox">Sticky</label>
-                                        </div>
-                                        <div class="form-check col-3">
-                                            <input class="form-check-input" type="checkbox" ng-model="unicode" id="unicodeCheckBox" />
-                                            <label class="form-check-label" for="unicodeCheckBox">Unicode</label>
-                                        </div>
-                                        <div class="form-check col-6">
-                                            <input class="form-check-input" type="checkbox" ng-model="dotMatchesNewline" id="dotMatchesNewlineCheckBox" />
-                                            <label class="form-check-label" for="dotMatchesNewlineCheckBox">&quot;.&quot; Matches Newline</label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" ng-click="regexTester.closeOptionsDialog($event)">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="card" ng-show="isShowingPatternOptions">
-                    <div class="card-header"><h3>Options</h3></div>
-                    <div class="card-body">
-                    </div>
-                </div>
-            </div>
-            <div class="form-group" ng-repeat="item in evaluationInput">
-                <h3>Input Text</h3>
-                <div class="input-group" ng-show="item.isEditingInput">
-                    <input type="text" class="form-control" ng-hide="item.isMultiLine" ng-model="item.inputText" ng-trim="false" />
-                    <text-edit-control ng-show="item.isMultiLine" model="item.inputText" rows-expr="item.rowCount" ng-trim="false"></text-edit-control>
-                    <div class="input-group-append">
-                        <div class="container-fluid">
-                            <div><button class="btn btn-primary" ng-click="item.item.toggleSearchReplace($event)"><img src="{{item.toggleImgSrc}}" width="16" height="16" alt="{{item.toggleImgAlt}}" /></button></div>
-                            <div><button class="btn btn-primary" ng-click="item.item.removeRow($event)" ng-show="item.canRemoveRow"><img src="./images/dave-gandy/chevron-up.svg" width="16" height="16" alt="Remove Row" /></button></div>
-                            <div><button class="btn btn-primary" ng-click="item.item.addRow($event)" ng-show="item.canAddRow"><img src="./images/dave-gandy/thin-arrowheads-pointing-down.svg" width="16" height="16" alt="Add Row" /></button></div>
-                        </div>
-                    </div>
-                </div>
-                <h3 ng-show="item.isReplace">Replacement Text</h3>
-                <div class="input-group" ng-show="item.isReplace">
-                    <input type="text" class="form-control" ng-hide="item.isMultiLine" ng-model="item.replacementText" ng-trim="false" />
-                    <text-edit-control ng-show="item.isMultiLine" model="item.replacementText" rows-expr="item.rowCount" ng-trim="false"></text-edit-control>
-                </div>
-                <div class="text-dark" ng-hide="item.isEditingInput">
-                    {{item.inputText}}
-                    <a href="#" ng-click="item.item.editCurrent($event)" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/pencil.svg" width="12" height="12" alt="Edit Input Text" /></a>
-                    <a href="#" ng-click="item.item.deleteCurrent($event)" ng-show="item.canDelete" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/x.svg" width="12" height="12" alt="Delete Input Text" /></a>
-                </div>
-                <div ng-class="item.messageClass" ng-hide="item.isReplace">{{item.messageText}}</div>
-                <div class="container-fluid" ng-show="item.isReplace">
-                    <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
-                        <div class="col-1 p-1 border-right border-light">Metric</div>
-                        <div class="col-2 p-1 border-left border-light">Original</div>
-                        <div class="col-9 p-1 border-left border-light">Result</div>
-                    </div>
-                    <div ng-class="item.changedClass">
-                        <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Changed:</div>
-                        <div class="col-11 p-1">{{item.changeMessage}}</div>
-                    </div>
-                    <div ng-class="item.lengthClass">
-                        <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">String Length:</div>
-                        <div class="col-2 p-1 border-dark">{{item.originalLength}}</div>
-                        <div class="col-9 p-1 border-left border-dark">{{item.replacedLength}}</div>
-                    </div>
-                    <div ng-class="item.lineCountClass">
-                        <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Line Count:</div>
-                        <div class="col-2 p-1 border-dark">{{item.originalLineCount}}</div>
-                        <div class="col-9 p-1 border-left border-dark">{{item.replacedLineCount}}</div>
-                    </div>
-                    <div class="row flex-nowrap no-gutters">
-                        <div class="col-6">
+                <div ng-show="isEditMode">
+                    <label for="{{patternTextBoxLabelId}}">Regular Expression</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><div class="container-fluid"><div class="input-group-text">/</div></div></div>
+                        <input type="text" class="form-control" id="{{singleLinePatternTextBoxId}}" ng-show="isSingleLineMode" ng-model="singleLinePatternText" ng-trim="false" />
+                        <text-edit-control textbox-id="{{multiLinePatternTextBoxId}}" ng-show="isMultiLineMode" model="multiLinePatternText" rows-expr="multiLineRowCount" ng-trim="false"></text-edit-control>
+                        <div class="input-group-append">
                             <div class="container-fluid">
-                                <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
-                                    <div class="col-1 p-1 border-right border-light">#</div>
-                                    <div class="col-1 p-1 border-left border-light">Length</div>
-                                    <div class="col-9 p-1 border-left border-light">Text</div>
-                                    <div class="col-1 p-1 border-left border-light">LE</div>
-                                </div>
-                            </div>
-                            <div class="container-fluid scrollable-tall border border-dark">
-                                <div ng-repeat="r in item.originalLineInfo" ng-class="r.cssClass">
-                                    <div class="col-1 p-1 border-right border-dark"><button class="btn btn-primary" ng-click="r.selectCurrent()" ng-hide="r.isSelected">{{$index}}</button></div>
-                                    <div class="col-1 p-1 border-right border-left border-dark">{{r.length}}</div>
-                                    <div class="col-9 p-1 border-right border-left border-dark">{{r.text}}</div>
-                                    <div class="col-1 p-1 border-left border-dark scrollable-short">{{r.lineEnding}}</div>
-                                </div>
+                                <div><button class="btn btn-dark" ng-click="regexPattern.openOptionsDialog($event)">/{{flags}}</button></div>
+                                <div><button class="btn btn-primary" ng-click="regexPattern.removePatternRow($event)" ng-show="canRemovePatternRow"><img src="./images/dave-gandy/chevron-up.svg" width="16" height="16" alt="Remove Row" /></button></div>
+                                <div><button class="btn btn-primary" ng-click="regexPattern.addPatternRow($event)" ng-show="canAddPatternRow"><img src="./images/dave-gandy/thin-arrowheads-pointing-down.svg" width="16" height="16" alt="Add Row" /></button></div>
                             </div>
                         </div>
-                        <div class="col-6">
+                    </div>
+                </div>
+                <error-message error="patternError"></error-message>
+                <regex-options is-dialog-visible="isOptionsDialogVisible" ignore-whitespace="ignoreWhitespace" flags="flags">
+                    <div class="container-fluid flex-nowrap">
+                        <div class="form-row">
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="global" id="globalCheckBox" />
+                                <label class="form-check-label" for="globalCheckBox">Global</label>
+                            </div>
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="ignoreCase" id="ignoreCaseCheckBox" />
+                                <label class="form-check-label" for="ignoreCaseCheckBox">Ignore Case</label>
+                            </div>
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="multiline" id="multilineCheckBox" />
+                                <label class="form-check-label" for="multilineCheckBox">Multi-Line</label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="sticky" id="stickyCheckBox" />
+                                <label class="form-check-label" for="stickyCheckBox">Sticky</label>
+                            </div>
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="unicode" id="unicodeCheckBox" />
+                                <label class="form-check-label" for="unicodeCheckBox">Unicode</label>
+                            </div>
+                            <div class="form-check col-3">
+                                <input class="form-check-input" type="checkbox" ng-model="ignoreWhitespace" id="ignoreWhitespaceCheckBox" />
+                                <label class="form-check-label" for="ignoreWhitespaceCheckBox">Ignore Whitespace</label>
+                            </div>
+                        </div>
+                    </div>
+                </regex-options>
+            </regex-pattern>
+            <div ng-repeat="item in testData"> 
+                <test-data-item class="form-group" index="$index" state="item.state" is-edit-mode="item.isEditMode" is-replace-mode="item.isReplaceMode" input-text="item.inputText" replacement-text="item.replacementText" can-delete="item.canDelete">
+                    <h3>Input Text</h3>
+                    <div class="input-group" ng-show="item.isEditingInput">
+                        <input type="text" class="form-control" ng-hide="item.isMultiLine" ng-model="item.inputText" ng-trim="false" />
+                        <text-edit-control ng-show="item.isMultiLine" model="item.inputText" rows-expr="item.rowCount" ng-trim="false"></text-edit-control>
+                        <div class="input-group-append">
                             <div class="container-fluid">
-                                <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
-                                    <div class="col-1 p-1 border-right border-light">#</div>
-                                    <div class="col-1 p-1 border-left border-light">Length</div>
-                                    <div class="col-9 p-1 border-left border-light">Text</div>
-                                    <div class="col-1 p-1 border-left border-light">LE</div>
-                                </div>
-                            </div>
-                            <div class="container-fluid scrollable-tall border border-dark">
-                                <div ng-repeat="r in item.replacedLineInfo" ng-class="r.cssClass">
-                                    <div class="col-1 p-1 border-right border-dark"><button class="btn btn-primary" ng-click="r.selectCurrent($event)" ng-hide="r.isSelected">{{$index}}</button></div>
-                                    <div class="col-1 p-1 border-right border-left border-dark">{{r.length}}</div>
-                                    <div class="col-9 p-1 border-right border-left border-dark">{{r.text}}</div>
-                                    <div class="col-1 p-1 border-left border-dark scrollable-short">{{r.lineEnding}}</div>
-                                </div>
+                                <div><button class="btn btn-primary" ng-click="item.item.toggleSearchReplace($event)"><img src="{{item.toggleImgSrc}}" width="16" height="16" alt="{{item.toggleImgAlt}}" /></button></div>
+                                <div><button class="btn btn-primary" ng-click="item.item.removeRow($event)" ng-show="item.canRemoveRow"><img src="./images/dave-gandy/chevron-up.svg" width="16" height="16" alt="Remove Row" /></button></div>
+                                <div><button class="btn btn-primary" ng-click="item.item.addRow($event)" ng-show="item.canAddRow"><img src="./images/dave-gandy/thin-arrowheads-pointing-down.svg" width="16" height="16" alt="Add Row" /></button></div>
                             </div>
                         </div>
                     </div>
-                    <div class="row flex-nowrap no-gutters" ng-class="item.compareClass">
-                        <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Original:</div>
-                        <div class="col-11 p-1 border-dark text-monospace">{{item.originalLine}}</div>
+                    <h3 ng-show="item.isReplace">Replacement Text</h3>
+                    <div class="input-group" ng-show="item.isReplace">
+                        <input type="text" class="form-control" ng-hide="item.isMultiLine" ng-model="item.replacementText" ng-trim="false" />
+                        <text-edit-control ng-show="item.isMultiLine" model="item.replacementText" rows-expr="item.rowCount" ng-trim="false"></text-edit-control>
                     </div>
-                    <div class="row flex-nowrap no-gutters" ng-class="item.compareClass">
-                        <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Compared:</div>
-                        <div class="col-11 p-1 border-dark text-monospace">{{item.comparedLine}}</div>
+                    <div class="text-dark" ng-hide="item.isEditingInput">
+                        {{item.inputText}}
+                        <a href="#" ng-click="item.item.editCurrent($event)" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/pencil.svg" width="12" height="12" alt="Edit Input Text" /></a>
+                        <a href="#" ng-click="item.item.deleteCurrent($event)" ng-show="item.canDelete" class="badge badge-pill badge-primary"><img src="./images/open-iconic/svg/x.svg" width="12" height="12" alt="Delete Input Text" /></a>
                     </div>
-                </div>
-                <div ng-show="item.matchSuccess" class="container-fluid">
-                    <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light border-success">
-                        <div class="col-1 p-1 border-right border-light">#</div>
-                        <div class="col-1 p-1 border-right border-left border-light">Matched</div>
-                        <div class="col-10 p-1 border-left border-light">Text</div>
+                    <error-message error="evaluationError"></error-message>
+                    <div class="container-fluid" ng-show="item.isReplace">
+                        <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
+                            <div class="col-1 p-1 border-right border-light">Metric</div>
+                            <div class="col-2 p-1 border-left border-light">Original</div>
+                            <div class="col-9 p-1 border-left border-light">Result</div>
+                        </div>
+                        <div ng-class="item.changedClass">
+                            <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Changed:</div>
+                            <div class="col-11 p-1">{{item.changeMessage}}</div>
+                        </div>
+                        <div ng-class="item.lengthClass">
+                            <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">String Length:</div>
+                            <div class="col-2 p-1 border-dark">{{item.originalLength}}</div>
+                            <div class="col-9 p-1 border-left border-dark">{{item.replacedLength}}</div>
+                        </div>
+                        <div ng-class="item.lineCountClass">
+                            <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Line Count:</div>
+                            <div class="col-2 p-1 border-dark">{{item.originalLineCount}}</div>
+                            <div class="col-9 p-1 border-left border-dark">{{item.replacedLineCount}}</div>
+                        </div>
+                        <div class="row flex-nowrap no-gutters">
+                            <div class="col-6">
+                                <div class="container-fluid">
+                                    <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
+                                        <div class="col-1 p-1 border-right border-light">#</div>
+                                        <div class="col-1 p-1 border-left border-light">Length</div>
+                                        <div class="col-9 p-1 border-left border-light">Text</div>
+                                        <div class="col-1 p-1 border-left border-light">LE</div>
+                                    </div>
+                                </div>
+                                <div class="container-fluid scrollable-tall border border-dark">
+                                    <div ng-repeat="r in item.originalLineInfo" ng-class="r.cssClass">
+                                        <div class="col-1 p-1 border-right border-dark"><button class="btn btn-primary" ng-click="r.selectCurrent()" ng-hide="r.isSelected">{{$index}}</button></div>
+                                        <div class="col-1 p-1 border-right border-left border-dark">{{r.length}}</div>
+                                        <div class="col-9 p-1 border-right border-left border-dark">{{r.text}}</div>
+                                        <div class="col-1 p-1 border-left border-dark scrollable-short">{{r.lineEnding}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="container-fluid">
+                                    <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light">
+                                        <div class="col-1 p-1 border-right border-light">#</div>
+                                        <div class="col-1 p-1 border-left border-light">Length</div>
+                                        <div class="col-9 p-1 border-left border-light">Text</div>
+                                        <div class="col-1 p-1 border-left border-light">LE</div>
+                                    </div>
+                                </div>
+                                <div class="container-fluid scrollable-tall border border-dark">
+                                    <div ng-repeat="r in item.replacedLineInfo" ng-class="r.cssClass">
+                                        <div class="col-1 p-1 border-right border-dark"><button class="btn btn-primary" ng-click="r.selectCurrent($event)" ng-hide="r.isSelected">{{$index}}</button></div>
+                                        <div class="col-1 p-1 border-right border-left border-dark">{{r.length}}</div>
+                                        <div class="col-9 p-1 border-right border-left border-dark">{{r.text}}</div>
+                                        <div class="col-1 p-1 border-left border-dark scrollable-short">{{r.lineEnding}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row flex-nowrap no-gutters" ng-class="item.compareClass">
+                            <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Original:</div>
+                            <div class="col-11 p-1 border-dark text-monospace">{{item.originalLine}}</div>
+                        </div>
+                        <div class="row flex-nowrap no-gutters" ng-class="item.compareClass">
+                            <div class="col-1 p-1 font-weight-bold bg-dark text-light text-right">Compared:</div>
+                            <div class="col-11 p-1 border-dark text-monospace">{{item.comparedLine}}</div>
+                        </div>
                     </div>
-                </div>
-                <div ng-show="item.matchSuccess" class="container-fluid scrollable-tall border border-dark">
-                    <div ng-repeat="r in item.matchResults" ng-class="r.cssClass">
-                        <div class="col-1 p-1 border-right border-dark">{{$index}}</div>
-                        <div class="col-1 p-1 border-right border-left border-dark">{{r.successMsg}}</div>
-                        <div class="col-10 p-1 border-left border-dark scrollable-short">{{r.groupText}}</div>
+                    <div ng-show="item.matchSuccess" class="container-fluid">
+                        <div class="row flex-nowrap no-gutters font-weight-bold bg-dark text-light border-success">
+                            <div class="col-1 p-1 border-right border-light">#</div>
+                            <div class="col-1 p-1 border-right border-left border-light">Matched</div>
+                            <div class="col-10 p-1 border-left border-light">Text</div>
+                        </div>
                     </div>
-                </div>
+                    <div ng-show="item.matchSuccess" class="container-fluid scrollable-tall border border-dark">
+                        <div ng-repeat="r in item.matchResults" ng-class="r.cssClass">
+                            <div class="col-1 p-1 border-right border-dark">{{$index}}</div>
+                            <div class="col-1 p-1 border-right border-left border-dark">{{r.successMsg}}</div>
+                            <div class="col-10 p-1 border-left border-dark scrollable-short">{{r.groupText}}</div>
+                        </div>
+                    </div>
+                </test-data-item>
             </div>
             <button class="btn btn-primary" ng-click="regexTester.addInput($event)"><img src="./images/open-iconic/svg/plus.svg" width="16" height="16" alt="Add Input" /></button>
         </form>

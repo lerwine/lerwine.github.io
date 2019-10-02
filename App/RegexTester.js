@@ -1,10 +1,18 @@
-/// <reference path="Scripts/typings/jquery/jquery.d.ts"/>
-/// <reference path="Scripts/typings/bootstrap/index.d.ts" />
-/// <reference path="Scripts/typings/angularjs/angular.d.ts"/>
+/// <reference path="../Scripts/typings/jquery/jquery.d.ts"/>
+/// <reference path="../Scripts/typings/bootstrap/index.d.ts" />
+/// <reference path="../Scripts/typings/angularjs/angular.d.ts"/>
 /// <reference path="sys.ts"/>
 /// <reference path="app.ts"/>
 var regexTester;
-(function (regexTester_1) {
+(function (regexTester) {
+    const DIRECTIVENAME_REGEXTESTER = "regexTester";
+    const DIRECTIVENAME_REGEXOPTIONS = "regexOptions";
+    const DIRECTIVENAME_REGEXPATTERN = "regexPattern";
+    const DIRECTIVENAME_TESTDATAITEM = "testDataItem";
+    const DIRECTIVENAME_ERRORMESSAGE = "errorMessage";
+    const CONTROL_ID_PATTERNOPTIONSMODAL = "patternOptionsModal";
+    const CONTROL_ID_MULTILINEPATTERNTEXTBOX = "multiLinePatternTextBox";
+    const CONTROL_ID_SINGLELINEPATTERNTEXTBOX = "singleLinePatternTextBox";
     const CSS_CLASS_ALERT_WARNING = "alert-warning";
     const CSS_CLASS_ALERT_DANGER = "alert-danger";
     const CSS_CLASS_ALERT_SUCCESS = "alert-success";
@@ -22,17 +30,6 @@ var regexTester;
     const CSS_CLASS_TEXT_DARK = "text-dark";
     const CSS_CLASS_BORDER_PRIMARY = "border-primary";
     const CSS_CLASS_NOWRAP = "flex-nowrap";
-    const CSS_CLASSES_ITEM_NOT_EVALUATED = [CSS_CLASS_ALERT_SECONDARY, CSS_CLASS_SMALL];
-    const CSS_CLASSES_ITEM_EVALUATION_ERROR = [CSS_CLASS_ALERT_DANGER];
-    const CSS_CLASSES_ITEM_EVALUATION_WARNING = [CSS_CLASS_ALERT_WARNING];
-    const CSS_CLASSES_ITEM_EVALUATION_SUCCESS = [CSS_CLASS_ALERT_SUCCESS];
-    const CSS_CLASSES_ITEM_GROUP_SUCCESS = [CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_ALERT_SUCCESS, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_GROUP_NO_MATCH = [CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_ALERT_SECONDARY, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_REPLACELINE_SELECTED = [CSS_CLASS_BG_PRIMARY, CSS_CLASS_TEXT_LIGHT, CSS_CLASS_BORDER_PRIMARY, CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED = [CSS_CLASS_TEXT_DARK, CSS_CLASS_BORDER_DARK, CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_METRIC_SUCCESS = [CSS_CLASS_BORDER_SUCCESS, CSS_CLASS_BG_SUCCESS, CSS_CLASS_TEXT_LIGHT, CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_METRIC_EQUAL = [CSS_CLASS_BORDER_DARK, CSS_CLASS_TEXT_DARK, CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_NOWRAP];
-    const CSS_CLASSES_ITEM_METRIC_WARNING = [CSS_CLASS_BORDER_WARNING, CSS_CLASS_BG_WARNING, CSS_CLASS_TEXT_DARK, CSS_CLASS_ROW, CSS_CLASS_NO_GUTTERS, CSS_CLASS_NOWRAP];
     const EVAL_RESULT_MSG_NOT_EVALUATED = "Not evaluated";
     const EVAL_RESULT_MSG_MATCH_NOT_FOUND = "Match not found";
     const IMG_SRC_EXPAND_DOWN = "./images/dave-gandy/thin-arrowheads-pointing-down.svg";
@@ -46,959 +43,760 @@ var regexTester;
     const WHITESPACE_REGEX = /[\s\r\n\p{C}]+/g;
     const NEWLINE_REGEX = /\r\n?|\n/g;
     const LINE_WITH_ENDING_REGEX = /^([^\r\n]+)?(\r\n?|\n)/g;
-    class EvaluationItem {
-        constructor($scope, _regexTester) {
-            this.$scope = $scope;
-            this._regexTester = _regexTester;
-            this._isEditingPattern = false;
-            this._isEditingInput = true;
-            $scope.item = this;
-            this.$scope.isReplace = false;
-            $scope.isEditingInput = this.isEditingInput;
-            $scope.inputText = "";
-            $scope.matchSuccess = false;
-            $scope.matchResults = [];
-            $scope.messageText = EVAL_RESULT_MSG_NOT_EVALUATED;
-            $scope.messageClass = [CSS_CLASS_ALERT_SECONDARY, CSS_CLASS_SMALL];
-            $scope.inputClass = [];
-            $scope.originalLineInfo = [];
-            $scope.replacedLineInfo = [];
-            $scope.changedClass = [];
-            $scope.lengthClass = [];
-            $scope.lineCountClass = [];
-            $scope.originalLength = $scope.replacedLength = $scope.originalLineCount = $scope.replacedLineCount = 0;
-            $scope.compareClass = [];
-            $scope.changeMessage = $scope.originalLine = $scope.replacementText = $scope.comparedLine = "";
-            $scope.matchIndex = NaN;
-            $scope.isEditingPattern = _regexTester.isEditingPattern;
-            $scope.toggleImgSrc = IMG_SRC_REPLACE;
-            $scope.toggleImgAlt = IMG_ALT_REPLACE;
-            let current = this;
-            $scope.$watchGroup(["inputText", "replacementText"], () => { current.evaluate(); });
-        }
-        get isEditingPattern() { return this._isEditingPattern; }
-        set isEditingPattern(value) {
-            if (this._isEditingPattern === (value = value === true))
-                return;
-            this._isEditingPattern = value;
-            this.updateView();
-        }
-        get isEditingInput() { return this._isEditingInput; }
-        set isEditingInput(value) {
-            if (this._isEditingInput === (value = value === true))
-                return;
-            this._isEditingInput = value;
-            this.updateView();
-        }
-        toggleSearchReplace(event) {
-            this.$scope.isReplace = this.$scope.isReplace !== true;
-            if (this.$scope.isReplace) {
-                this.$scope.toggleImgSrc = IMG_SRC_MATCH;
-                this.$scope.toggleImgAlt = IMG_ALT_MATCH;
-            }
-            else {
-                this.$scope.toggleImgSrc = IMG_SRC_REPLACE;
-                this.$scope.toggleImgAlt = IMG_ALT_REPLACE;
-                this.$scope.matchSuccess = false;
-            }
-            this.evaluate();
-            if (!sys.isNil(event)) {
+    const PATTERN_FLAG_SYMBOLS = { global: "g", ignoreCase: "i", multiLine: "m", unicode: "u", sticky: "y" };
+    const PATTERN_FLAG_NAMES = Object.getOwnPropertyNames(PATTERN_FLAG_SYMBOLS);
+    function preventDefault(event) {
+        if (typeof event === "object" && event !== null) {
+            if (!event.isDefaultPrevented())
                 event.preventDefault();
+            if (!event.isPropagationStopped())
                 event.stopPropagation();
-            }
         }
-        updateView() {
-            if (this.isEditingInput && !this.isEditingPattern) {
-                this.$scope.isEditingInput = true;
-                this.$scope.canRemoveRow = this.$scope.rowCount > 1;
-                this.$scope.canAddRow = this.$scope.rowCount < TEXTAREA_ROW_COUNT_MAX;
-            }
-            else
-                this.$scope.isEditingInput = this.$scope.canAddRow = this.$scope.canRemoveRow = false;
-        }
-        addRow(event) {
-            if (this.$scope.rowCount >= TEXTAREA_ROW_COUNT_MAX)
-                return;
-            this.$scope.rowCount++;
-            this.$scope.isMultiLine = true;
-            this.updateView();
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        removeRow(event) {
-            if (this.$scope.rowCount < 2)
-                return;
-            this.$scope.rowCount--;
-            this.$scope.isMultiLine = this.$scope.rowCount > 1;
-            this.updateView();
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        editCurrent(event) {
-            this._regexTester.editItem(this._index);
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        deleteCurrent(event) {
-            if (this.$scope.canDelete === true)
-                this._regexTester.deleteItem(this._index);
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        static addItem(item, array) {
-            item._index = array.length;
-            array.push(item.$scope);
-            if (array.length == 2)
-                array[0].canDelete = true;
-            else if (array.length < 2) {
-                item.$scope.isMultiLine = false;
-                item.$scope.rowCount = 1;
-                item.$scope.canDelete = false;
-                item.$scope.canAddRow = true;
-                item.$scope.canRemoveRow = false;
-                return;
-            }
-            let previousScope = array[array.length - 2];
-            item.$scope.isMultiLine = previousScope.isMultiLine;
-            item.$scope.rowCount = previousScope.rowCount;
-            item.$scope.canAddRow = previousScope.canAddRow;
-            item.$scope.canRemoveRow = previousScope.canRemoveRow;
-            item.$scope.canDelete = true;
-            item.updateView();
-            item.evaluate();
-            item.editCurrent();
-        }
-        static editItem(array, index) {
-            if (isNaN(index) || index < 0 || index > array.length)
-                return;
-            let $scope = array[index];
-            if ($scope.isEditingInput)
-                return;
-            array.forEach((s, i) => {
-                if (index != i)
-                    s.item.isEditingInput = false;
-            });
-            $scope.item.isEditingInput = true;
-            $scope.item._regexTester.isEditingPattern = false;
-            $scope.item.updateView();
-        }
-        static deleteItem(array, index) {
-            if (array.length < 2 || isNaN(index) || index < 0 || index > array.length)
-                return;
-            let $scope;
-            if (index == 0)
-                $scope = array.shift();
-            else if (index < array.length - 1)
-                $scope = array.splice(index, 1)[0];
-            else
-                $scope = array.pop();
-            for (let i = index; i < array.length; i++)
-                array[i].item._index = i;
-            $scope.$destroy();
-            if (array.length == 1)
-                array[0].canDelete = false;
-        }
-        selectOriginalLine(index) {
-            if (typeof index !== "number" || isNaN(index) || index < 0 || index >= this.$scope.originalLineInfo.length)
-                return;
-            this.$scope.originalLine = this.$scope.originalLineInfo[index].text;
-            if (this.$scope.originalLine === this.$scope.comparedLine)
-                this.$scope.compareClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-            else
-                this.$scope.compareClass = CSS_CLASSES_ITEM_METRIC_SUCCESS;
-            this.$scope.originalLineInfo.forEach((value, i) => {
-                if (i === index) {
-                    value.cssClass = CSS_CLASSES_ITEM_REPLACELINE_SELECTED;
-                    value.isSelected = true;
-                }
-                else {
-                    value.cssClass = CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED;
-                    value.isSelected = false;
-                }
-            });
-        }
-        selectResultLine(index) {
-            if (typeof index !== "number" || isNaN(index) || index < 0 || index >= this.$scope.originalLineInfo.length)
-                return;
-            this.$scope.comparedLine = this.$scope.replacedLineInfo[index].text;
-            if (this.$scope.originalLine === this.$scope.comparedLine)
-                this.$scope.compareClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-            else
-                this.$scope.compareClass = CSS_CLASSES_ITEM_METRIC_SUCCESS;
-            this.$scope.replacedLineInfo.forEach((value, i) => {
-                if (i === index) {
-                    value.cssClass = CSS_CLASSES_ITEM_REPLACELINE_SELECTED;
-                    value.isSelected = true;
-                }
-                else {
-                    value.cssClass = CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED;
-                    value.isSelected = false;
-                }
-            });
-        }
-        evaluate(event) {
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            let re = this._regexTester.expression;
-            if (sys.isNil(re)) {
-                this.$scope.matchSuccess = false;
-                this.$scope.messageText = EVAL_RESULT_MSG_NOT_EVALUATED;
-                this.$scope.messageClass = CSS_CLASSES_ITEM_NOT_EVALUATED;
-                this.$scope.matchResults = [];
-                this.$scope.originalLineInfo = [];
-                this.$scope.replacedLineInfo = [];
-                this.$scope.changedClass = [];
-                this.$scope.lengthClass = [];
-                this.$scope.lineCountClass = [];
-                this.$scope.originalLength = this.$scope.replacedLength = this.$scope.originalLineCount = this.$scope.replacedLineCount = 0;
-                this.$scope.compareClass = [];
-                this.$scope.originalLine = this.$scope.changeMessage = this.$scope.comparedLine = "";
-                return;
-            }
-            if (this.$scope.isReplace) {
-                let originalText = this.$scope.inputText;
-                let replacementText = this.$scope.replacementText;
-                this._regexTester.$q((resolve, reject) => {
-                    if (sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags || originalText !== this.$scope.inputText || replacementText !== this.$scope.replacementText)
-                        resolve(undefined);
-                    else {
-                        this._regexTester.$log.debug("Testing " + this._regexTester.expression.toString() + " against " + angular.toJson(originalText));
-                        try {
-                            let s = originalText.replace(re, replacementText);
-                            resolve(s);
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    }
-                }).then((result) => {
-                    if (sys.isNil(result) || sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags || originalText !== this.$scope.inputText || replacementText !== this.$scope.replacementText)
-                        return;
-                    if (originalText === result) {
-                        this.$scope.changedClass = CSS_CLASSES_ITEM_METRIC_WARNING;
-                        this.$scope.changeMessage = "No";
-                        this.$scope.lengthClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-                        this.$scope.lineCountClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-                        this.$scope.originalLength = this.$scope.replacedLength = originalText.length;
-                    }
-                    else {
-                        this.$scope.changedClass = CSS_CLASSES_ITEM_METRIC_SUCCESS;
-                        this.$scope.changeMessage = "Yes";
-                        if ((this.$scope.originalLength = originalText.length) === (this.$scope.replacedLength = result.length))
-                            this.$scope.lengthClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-                        else
-                            this.$scope.lengthClass = CSS_CLASSES_ITEM_METRIC_SUCCESS;
-                    }
-                    let item = this;
-                    if ((this.$scope.originalLength = originalText.length) == 0)
-                        this.$scope.originalLineInfo = [{ isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: 0, lineEnding: "", selectCurrent: () => { item.selectOriginalLine(0); }, text: "\"\"" }];
-                    else {
-                        this.$scope.originalLineInfo = [];
-                        let m = LINE_WITH_ENDING_REGEX.exec(originalText);
-                        while (!sys.isNil(m)) {
-                            let s = angular.toJson(m[2]);
-                            s = s.substr(1, s.length - 2);
-                            if (sys.isNil(m[1]))
-                                this.$scope.originalLineInfo.push({
-                                    isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: 0, lineEnding: s, selectCurrent: () => {
-                                        item.selectOriginalLine(this.$scope.originalLineInfo.length);
-                                        if (!sys.isNil(event)) {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                        }
-                                    }, text: "\"\""
-                                });
-                            else
-                                this.$scope.originalLineInfo.push({
-                                    isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: m[1].length, lineEnding: s, selectCurrent: () => {
-                                        item.selectOriginalLine(this.$scope.originalLineInfo.length);
-                                        if (!sys.isNil(event)) {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                        }
-                                    }, text: angular.toJson(m[1])
-                                });
-                            originalText = originalText.substr(m[0].length);
-                            m = LINE_WITH_ENDING_REGEX.exec(originalText);
-                        }
-                        if (originalText.length > 0)
-                            this.$scope.originalLineInfo.push({
-                                isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: originalText.length, lineEnding: "", selectCurrent: () => {
-                                    item.selectOriginalLine(this.$scope.originalLineInfo.length);
-                                    if (!sys.isNil(event)) {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                    }
-                                }, text: angular.toJson(originalText)
-                            });
-                    }
-                    if ((this.$scope.replacedLength = result.length) == 0)
-                        this.$scope.replacedLineInfo = [{
-                                isSelected: true, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: 0, lineEnding: "", selectCurrent: () => {
-                                    item.selectResultLine(0);
-                                    if (!sys.isNil(event)) {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                    }
-                                }, text: "\"\""
-                            }];
-                    else {
-                        this.$scope.replacedLineInfo = [];
-                        let m = LINE_WITH_ENDING_REGEX.exec(result);
-                        while (!sys.isNil(m)) {
-                            let s = angular.toJson(m[2]);
-                            s = s.substr(1, s.length - 2);
-                            if (sys.isNil(m[1]))
-                                this.$scope.replacedLineInfo.push({
-                                    isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: 0, lineEnding: s, selectCurrent: () => {
-                                        item.selectResultLine(this.$scope.replacedLineInfo.length);
-                                        if (!sys.isNil(event)) {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                        }
-                                    }, text: "\"\""
-                                });
-                            else
-                                this.$scope.replacedLineInfo.push({
-                                    isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: m[1].length, lineEnding: s, selectCurrent: () => {
-                                        item.selectResultLine(this.$scope.replacedLineInfo.length);
-                                        if (!sys.isNil(event)) {
-                                            event.preventDefault();
-                                            event.stopPropagation();
-                                        }
-                                    }, text: angular.toJson(m[1])
-                                });
-                            result = result.substr(m[0].length);
-                            m = LINE_WITH_ENDING_REGEX.exec(result);
-                        }
-                        if (result.length > 0)
-                            this.$scope.replacedLineInfo.push({
-                                isSelected: false, cssClass: CSS_CLASSES_ITEM_REPLACELINE_NOTSELECTED, length: result.length, lineEnding: "", selectCurrent: () => {
-                                    item.selectResultLine(this.$scope.replacedLineInfo.length);
-                                    if (!sys.isNil(event)) {
-                                        event.preventDefault();
-                                        event.stopPropagation();
-                                    }
-                                }, text: angular.toJson(result)
-                            });
-                    }
-                    ;
-                    this.$scope.comparedLine = "";
-                    if ((this.$scope.originalLineCount = this.$scope.originalLineInfo.length) === (this.$scope.replacedLineCount = this.$scope.replacedLineInfo.length))
-                        this.$scope.lineCountClass = CSS_CLASSES_ITEM_METRIC_EQUAL;
-                    else
-                        this.$scope.lineCountClass = CSS_CLASSES_ITEM_METRIC_SUCCESS;
-                    this.selectOriginalLine(0);
-                    this.selectResultLine(0);
-                }, (reason) => {
-                    if (sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags || originalText !== this.$scope.inputText || replacementText !== this.$scope.replacementText)
-                        return;
-                    if (sys.isNil(this._regexTester.patternError))
-                        this._regexTester.patternError = reason;
-                    this.$scope.messageClass = CSS_CLASSES_ITEM_EVALUATION_ERROR;
-                    this.$scope.messageText = "Unexpected error: " + reason;
-                    this.$scope.originalLineInfo = [];
-                    this.$scope.replacedLineInfo = [];
-                    this.$scope.changedClass = [];
-                    this.$scope.lengthClass = [];
-                    this.$scope.lineCountClass = [];
-                    this.$scope.originalLength = this.$scope.replacedLength = this.$scope.originalLineCount = this.$scope.replacedLineCount = 0;
-                    this.$scope.compareClass = [];
-                    this.$scope.originalLine = this.$scope.changeMessage = this.$scope.comparedLine = "";
-                    this._regexTester.evaluationComplete(false, this._index);
-                });
-            }
-            else {
-                this._regexTester.$q((resolve, reject) => {
-                    if (sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags)
-                        resolve(undefined);
-                    else {
-                        this._regexTester.$log.debug("Testing " + this._regexTester.expression.toString() + " against " + angular.toJson(this.$scope.inputText));
-                        try {
-                            let m = re.exec(this.$scope.inputText);
-                            resolve(m);
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    }
-                }).then((result) => {
-                    if (typeof result === "undefined" || sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags)
-                        return;
-                    if (result === null) {
-                        this.$scope.matchSuccess = false;
-                        this.$scope.messageClass = CSS_CLASSES_ITEM_EVALUATION_WARNING;
-                        this.$scope.messageText = EVAL_RESULT_MSG_MATCH_NOT_FOUND;
-                        this.$scope.matchResults = [];
-                        this._regexTester.evaluationComplete(false, this._index);
-                    }
-                    else {
-                        this.$scope.matchSuccess = true;
-                        this.$scope.messageClass = CSS_CLASSES_ITEM_EVALUATION_SUCCESS;
-                        this.$scope.messageText = "Matched " + result.length + " groups starting at position " + result.index + ".";
-                        this.$scope.matchIndex = result.index;
-                        this.$scope.matchResults = result.map((value, index) => {
-                            if (sys.isNil(value))
-                                return {
-                                    cssClass: CSS_CLASSES_ITEM_GROUP_NO_MATCH,
-                                    groupText: "",
-                                    successMsg: "No",
-                                    index: index
-                                };
-                            return {
-                                cssClass: CSS_CLASSES_ITEM_GROUP_SUCCESS,
-                                groupText: angular.toJson(value),
-                                successMsg: "Yes",
-                                index: index
-                            };
-                        });
-                        this._regexTester.evaluationComplete(true, this._index);
-                    }
-                }, (reason) => {
-                    if (sys.isNil(this._regexTester.expression) || re.source !== this._regexTester.expression.source || re.flags !== this._regexTester.expression.flags)
-                        return;
-                    if (sys.isNil(this._regexTester.patternError))
-                        this._regexTester.patternError = reason;
-                    this.$scope.messageClass = CSS_CLASSES_ITEM_EVALUATION_ERROR;
-                    this.$scope.messageText = "Unexpected error: " + reason;
-                    this.$scope.matchResults = [];
-                    this._regexTester.evaluationComplete(false, this._index);
-                });
-            }
-        }
+        return false;
     }
-    // #endregion
-    // #region RegexTesterController_old
-    const CONTROL_ID_MULTILINEPATTERNTEXTBOX = "multiLinePatternTextBox";
-    const CONTROL_ID_SINGLELINEPATTERNTEXTBOX = "singleLinePatternTextBox";
-    // (?:([^?:+\\/@?#%]+)(:(?://?|/?$)))(?:((?:[^:+\\/@?#]+|%[a-f\d]2)*)(?::((?:[^\\/@?#]+|%[a-f\d]2)*))?@(?![:/?#\\]))?(((?:[^:\\/@?#]+|%[a-f\d]2)+)(:(\d+))?)?
-    class RegexTesterController_old {
+    function getUniqueClassNames(attr) {
+        let classNames;
+        let s;
+        if (typeof attr.class === "string")
+            classNames = ((s = attr.class.trim()).length === 0) ? [] : s.split(WHITESPACE_REGEX);
+        else {
+            classNames = [];
+            if (!sys.isNil(attr.class)) {
+                attr.class.forEach((n) => {
+                    if (typeof n === "string" && (s = n.trim()).length > 0)
+                        classNames = classNames.concat(s.split(WHITESPACE_REGEX));
+                });
+            }
+        }
+        if (typeof attr.ngClass === "string") {
+            if ((s = attr.ngClass.trim()).length == 0)
+                return (classNames.length === 0) ? classNames : sys.unique(classNames);
+            return sys.unique((classNames.length === 0) ? s.split(WHITESPACE_REGEX) : classNames.concat(s.split(WHITESPACE_REGEX)));
+        }
+        if (sys.isNil(attr.ngClass))
+            return (classNames.length === 0) ? classNames : sys.unique(classNames);
+        attr.ngClass.forEach((n) => {
+            if (typeof n === "string" && (s = n.trim()).length > 0)
+                classNames = classNames.concat(s.split(WHITESPACE_REGEX));
+        });
+        return sys.unique(classNames);
+    }
+    // #region test-data-item directive
+    let EvaluationState;
+    (function (EvaluationState) {
+        EvaluationState[EvaluationState["pending"] = 0] = "pending";
+        EvaluationState[EvaluationState["notEvaluated"] = 1] = "notEvaluated";
+        EvaluationState[EvaluationState["evaluating"] = 2] = "evaluating";
+        EvaluationState[EvaluationState["succeeded"] = 3] = "succeeded";
+        EvaluationState[EvaluationState["noMatch"] = 4] = "noMatch";
+        EvaluationState[EvaluationState["error"] = 5] = "error";
+    })(EvaluationState || (EvaluationState = {}));
+    class TestDataItemController {
         constructor($scope, $q, $log) {
             this.$scope = $scope;
             this.$q = $q;
             this.$log = $log;
-            $scope.regexTester = this;
-            $scope.multiLineRowCount = TEXTAREA_ROW_COUNT_DEFAULT;
-            $scope.multiLinePatternTextBoxId = CONTROL_ID_MULTILINEPATTERNTEXTBOX;
-            $scope.singleLinePatternTextBoxId = CONTROL_ID_SINGLELINEPATTERNTEXTBOX;
-            $scope.evaluationInput = [];
-            $scope.ignoreWhitespace = $scope.global = $scope.ignoreCase = $scope.multiline = $scope.sticky = $scope.unicode = $scope.dotMatchesNewline = $scope.hasErrorMessage = $scope.hasErrorName = $scope.hasErrorDetail = false;
-            $scope.noMatches = true;
-            $scope.singleLinePatternText = $scope.multiLinePatternText = $scope.flags = $scope.patternErrorMessage = $scope.patternErrorName = $scope.patternErrorDetail = "";
+            this._state = EvaluationState.notEvaluated;
+            this._isReplaceMode = false;
+            this._isEditMode = false;
+            this._inputText = "";
+            this._replacementText = "";
+            $scope.matchIndex = 0;
+            $scope.replacementResult = [];
+            $scope.inputLines = [];
+            $scope.matchResult = [];
+        }
+        get isEditMode() { return this._isEditMode; }
+        set isEditMode(value) {
+            let isChanged = ((value = value === true) !== this._isEditMode);
+            this._isEditMode = value;
+            if (this.$scope.isEditMode !== value)
+                this.$scope.isEditMode = value;
+            if (isChanged)
+                this.onIsEditModeChanged();
+        }
+        get inputText() { return this._inputText; }
+        set inputText(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._inputText);
+            this._inputText = value;
+            if (this.$scope.inputText !== value)
+                this.$scope.inputText = value;
+            if (isChanged)
+                this.onInputTextChanged();
+        }
+        get replacementText() { return this._replacementText; }
+        set replacementText(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._replacementText);
+            this._replacementText = value;
+            if (this.$scope.replacementText !== value)
+                this.$scope.replacementText = value;
+            if (isChanged)
+                this.onReplacementTextChanged();
+        }
+        get isReplaceMode() { return this._isReplaceMode; }
+        set isReplaceMode(value) {
+            let isChanged = ((value = value === true) !== this._isReplaceMode);
+            this._isReplaceMode = value;
+            if (this.$scope.isEditMode) {
+                if (this.$scope.isReplaceMode !== value)
+                    this.$scope.isReplaceMode = value;
+                if (this.$scope.isMatchMode !== (value === false))
+                    this.$scope.isMatchMode = !value;
+            }
+            if (isChanged)
+                this.onIsReplaceModeChanged();
+        }
+        get state() { return this._state; }
+        set state(value) {
+            if (value === this._state) {
+                if (this.$scope.state !== this._state)
+                    this.$scope.state = this._state;
+                return;
+            }
+            if (value === EvaluationState.pending) {
+                this._state = EvaluationState.evaluating;
+                if (this.$scope.state !== this._state)
+                    this.$scope.state = this._state;
+                this.onStateChanged();
+                this.startEvaluation();
+            }
+            else {
+                this._state = value;
+                if (this.$scope.state !== value)
+                    this.$scope.state = value;
+                this.onStateChanged();
+            }
+        }
+        editCurrentItem(event) {
+            preventDefault(event);
+            this._parentController.editItem(this.$scope.itemIndex);
+        }
+        deleteCurrentItem(event) {
+            preventDefault(event);
+            this._parentController.deleteItem(this.$scope.itemIndex);
+        }
+        startEvaluation() {
+            let regex = this._parentController.regex;
+            if (sys.isNil(regex)) {
+                this.state = EvaluationState.notEvaluated;
+                if (!sys.isNil(this.$scope.evaluationError))
+                    this.$scope.evaluationError = undefined;
+                return;
+            }
+            this.state = EvaluationState.evaluating;
+            let inputText = this.$scope.inputText;
+            let isReplaceMode = this.isReplaceMode;
+            let replacementText = this.$scope.replacementText;
             let controller = this;
-            $scope.$watchGroup(["global", "ignoreCase", "multiline", "sticky", "unicode", "dotMatchesNewline"], () => {
-                controller.updateFlags();
-            });
-            $scope.$watch("ignoreWhitespace", () => { controller.updatePatternView(); });
-            $scope.$watch("multiLinePatternText", () => {
-                controller.multiLinePatternChanged();
-            });
-            $scope.$watch("singleLinePatternText", () => {
-                controller.patternChanged();
-            });
-            this.addInput();
-            this.editPattern();
-            this.patternChanged();
-        }
-        get expression() { return this._expression; }
-        get isEditingPattern() { return this.$scope.isEditingPattern; }
-        set isEditingPattern(value) {
-            if (this.$scope.isEditingPattern === value)
-                return;
-            this.$scope.isEditingPattern = value === true;
-            this.updatePatternView();
-        }
-        get patternError() { return this._patternError; }
-        set patternError(value) {
-            value = sys.asErrorResult(value);
-            if (sys.isNil(value)) {
-                this._patternError = undefined;
-                this.$scope.hasErrorMessage = this.$scope.hasErrorDetail = this.$scope.hasErrorName = false;
-                this.$scope.patternErrorMessage = this.$scope.patternErrorDetail = this.$scope.patternErrorName = "";
-            }
-            else {
-                this._patternError = value;
-                this.$scope.hasErrorMessage = true;
-                if (typeof value === "string") {
-                    this.$scope.patternErrorMessage = value;
-                    this.$scope.hasErrorDetail = this.$scope.hasErrorName = false;
-                    this.$scope.patternErrorDetail = this.$scope.patternErrorName = "";
-                }
-                else {
-                    if ((this.$scope.patternErrorMessage = sys.asString(value.message, "").trim()).length == 0) {
-                        if ((this.$scope.patternErrorMessage = sys.asString(value.name, "").trim()).length == 0)
-                            this.$scope.patternErrorMessage = "Unexpected error: " + value;
-                        this.$scope.patternErrorName = "";
-                    }
-                    else
-                        this.$scope.patternErrorName = sys.asString(value.name, "").trim();
-                    this.$scope.patternErrorDetail = sys.asString(value.data, "");
-                    this.$scope.hasErrorName = this.$scope.patternErrorName.length > 0;
-                    this.$scope.hasErrorDetail = this.$scope.patternErrorDetail.trim().length > 0;
-                }
-            }
-        }
-        addPatternRow(event) {
-            if (this.$scope.multiLineRowCount >= TEXTAREA_ROW_COUNT_MAX)
-                return;
-            this.$scope.multiLineRowCount++;
-            this.updatePatternView();
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        removePatternRow(event) {
-            if (this.$scope.multiLineRowCount < 3)
-                return;
-            this.$scope.multiLineRowCount--;
-            this.updatePatternView();
-            if (this.isEditingPattern && this.$scope.isShowingMultiLinePatternEdit)
-                $(CONTROL_ID_MULTILINEPATTERNTEXTBOX).focus();
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        addInput(event) {
-            EvaluationItem.addItem(new EvaluationItem(this.$scope.$new(), this), this.$scope.evaluationInput);
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        editPattern(event) {
-            this.isEditingPattern = true;
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        openOptionsDialog(event) {
-            $('#patternOptionsModal').modal("show");
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        closeOptionsDialog(event) {
-            $('#patternOptionsModal').modal("hide");
-            if (!sys.isNil(event)) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-        }
-        updatePatternView() {
-            if (this.isEditingPattern) {
-                if (this.$scope.ignoreWhitespace === true) {
-                    this.$scope.patternTextBoxLabelId = CONTROL_ID_MULTILINEPATTERNTEXTBOX;
-                    this.$scope.canAddPatternRow = this.$scope.multiLineRowCount < TEXTAREA_ROW_COUNT_MAX;
-                    this.$scope.isShowingMultiLinePatternEdit = this.$scope.canRemovePatternRow = this.$scope.multiLineRowCount > 1;
-                    this.$scope.isShowingSingleLinePatternEdit = !this.$scope.isShowingMultiLinePatternEdit;
-                }
-                else {
-                    this.$scope.patternTextBoxLabelId = CONTROL_ID_SINGLELINEPATTERNTEXTBOX;
-                    this.$scope.isShowingMultiLinePatternEdit = this.$scope.canAddPatternRow = this.$scope.canRemovePatternRow = false;
-                    this.$scope.isShowingSingleLinePatternEdit = true;
-                }
-                this.$scope.evaluationInput.forEach((item) => { item.item.isEditingPattern = true; });
-            }
-            else {
-                this.$scope.isShowingSingleLinePatternEdit = this.$scope.isShowingMultiLinePatternEdit = this.$scope.canAddPatternRow = this.$scope.canRemovePatternRow = false;
-                this.$scope.evaluationInput.forEach((item) => { item.item.isEditingPattern = false; });
-            }
-        }
-        updateFlags() {
-            let flags = (this.$scope.ignoreCase) ? "i" : "";
-            if (this.$scope.global)
-                flags += "g";
-            if (this.$scope.multiline)
-                flags += "m";
-            if (this.$scope.dotMatchesNewline)
-                flags += "s";
-            if (this.$scope.unicode)
-                flags += "u";
-            if (this.$scope.sticky)
-                flags += "y";
-            if (flags === this.$scope.flags)
-                return;
-            this.$scope.flags = flags;
-            this.patternChanged();
-        }
-        multiLinePatternChanged() {
-            if (!this.$scope.ignoreWhitespace)
-                return;
-            let pattern = sys.asString(this.$scope.multiLinePatternText).trim().replace(WHITESPACE_REGEX, "");
-            if (pattern === this.$scope.singleLinePatternText)
-                return;
-            this.$scope.singleLinePatternText = pattern;
-            this.patternChanged();
-        }
-        patternChanged() {
-            let patternText = this.$scope.singleLinePatternText;
-            if (!this.$scope.ignoreWhitespace)
-                this.$scope.multiLinePatternText = patternText;
-            let flags = this.$scope.flags;
-            this._expression = undefined;
             this.$q((resolve, reject) => {
-                if (patternText !== this.$scope.singleLinePatternText || flags !== this.$scope.flags)
-                    resolve(undefined);
-                else {
-                    let re;
-                    try {
-                        re = new RegExp(patternText, flags);
+                if (isReplaceMode) {
+                    if (inputText !== controller.inputText || isReplaceMode !== controller.isReplaceMode || replacementText !== controller.replacementText || sys.isNil(controller._parentController.regex) || controller._parentController.regex.source !== regex.source || controller._parentController.regex.flags !== regex.flags)
+                        resolve(undefined);
+                    else {
+                        let replaced;
+                        try {
+                            replaced = inputText.replace(regex, replacementText);
+                        }
+                        catch (err) {
+                            reject(err);
+                            return;
+                        }
+                        if (sys.isNil(replaced))
+                            reject("Replacement returned null value");
+                        else
+                            resolve(replaced);
                     }
-                    catch (e) {
-                        reject(e);
+                }
+                else if (inputText !== controller.inputText || isReplaceMode !== controller.isReplaceMode || sys.isNil(controller._parentController.regex) || controller._parentController.regex.source !== regex.source || controller._parentController.regex.flags !== regex.flags) {
+                    resolve(undefined);
+                    return;
+                }
+                else {
+                    let result;
+                    try {
+                        result = regex.exec(inputText);
+                    }
+                    catch (err) {
+                        reject(err);
                         return;
                     }
-                    if (sys.isNil(re))
-                        reject("Failed to parse regular expression.");
-                    else
-                        resolve(re);
+                    resolve(result);
                 }
-            }).then((result) => {
-                if (patternText !== this.$scope.singleLinePatternText || flags !== this.$scope.flags)
+            }).then((promiseValue) => {
+                if (inputText !== controller.inputText || isReplaceMode !== controller.isReplaceMode || (controller.isReplaceMode && replacementText !== controller.replacementText) || sys.isNil(controller._parentController.regex) || controller._parentController.regex.source !== regex.source || controller._parentController.regex.flags !== regex.flags)
                     return;
-                this.$scope.patternDisplayText = result.toString();
-                this._expression = result;
-                this.$scope.patternErrorMessage = this.$scope.patternErrorName = this.$scope.patternErrorDetail = "";
-                this.$scope.hasErrorMessage = this.$scope.hasErrorName = this.$scope.hasErrorDetail = false;
-                this.$scope.noMatches = true;
-                this.$scope.evaluationInput.forEach((value) => { value.item.evaluate(); });
-            }, (reason) => {
-                if (patternText === this.$scope.singleLinePatternText && flags === this.$scope.flags)
-                    this.patternError = reason;
+                controller.$scope.replacementResult = [];
+                if (sys.isNil(promiseValue)) {
+                    controller.state = EvaluationState.noMatch;
+                    controller.$scope.matchIndex = inputText.length;
+                    controller.$scope.matchResult = [];
+                    controller.$scope.inputLines = [];
+                }
+                else if (typeof promiseValue === "string") {
+                    controller.$scope.matchResult = [];
+                    let s = promiseValue;
+                    let m = LINE_WITH_ENDING_REGEX.exec(s);
+                    let txt;
+                    while (!sys.isNil(m)) {
+                        let nl = angular.toJson(m[2]);
+                        if (sys.isNil(m[1]))
+                            controller.$scope.replacementResult.push({ escapedText: "", text: "", length: 0, lineEnding: nl.substr(1, nl.length - 2) });
+                        else {
+                            txt = angular.toJson(m[1]);
+                            controller.$scope.replacementResult.push({ escapedText: txt.substr(1, txt.length - 2), text: m[1], length: m[1].length, lineEnding: nl.substr(1, nl.length - 2) });
+                        }
+                        if (m[0].length === s.length) {
+                            s = "";
+                            break;
+                        }
+                        s = s.substr(m[0].length);
+                        m = LINE_WITH_ENDING_REGEX.exec(s);
+                    }
+                    if (s.length > 0 || controller.$scope.replacementResult.length == 0) {
+                        txt = angular.toJson(s);
+                        controller.$scope.replacementResult.push({ escapedText: txt.substr(1, txt.length - 2), text: s, length: s.length, lineEnding: "" });
+                    }
+                    if (promiseValue === inputText) {
+                        controller.state = EvaluationState.noMatch;
+                        controller.$scope.matchIndex = inputText.length;
+                        controller.$scope.inputLines = controller.$scope.replacementResult.map((value) => ({ escapedText: value.escapedText, length: value.length, lineEnding: value.lineEnding, text: value.text }));
+                    }
+                    else {
+                        controller.state = EvaluationState.succeeded;
+                        s = inputText;
+                        m = LINE_WITH_ENDING_REGEX.exec(s);
+                        controller.$scope.inputLines = [];
+                        while (!sys.isNil(m)) {
+                            let nl = angular.toJson(m[2]);
+                            if (sys.isNil(m[1]))
+                                controller.$scope.inputLines.push({ escapedText: "", text: "", length: 0, lineEnding: nl.substr(1, nl.length - 2) });
+                            else {
+                                txt = angular.toJson(m[1]);
+                                controller.$scope.inputLines.push({ escapedText: txt.substr(1, txt.length - 2), text: m[1], length: m[1].length, lineEnding: nl.substr(1, nl.length - 2) });
+                            }
+                            if (m[0].length === s.length) {
+                                s = "";
+                                break;
+                            }
+                            s = s.substr(m[0].length);
+                            m = LINE_WITH_ENDING_REGEX.exec(s);
+                        }
+                        if (s.length > 0 || controller.$scope.inputLines.length == 0) {
+                            txt = angular.toJson(s);
+                            controller.$scope.inputLines.push({ escapedText: txt.substr(1, txt.length - 2), text: s, length: s.length, lineEnding: "" });
+                        }
+                        let matchIndex = (promiseValue.length < inputText.length) ? promiseValue.length : inputText.length;
+                        for (let i = 0; i < matchIndex; i++) {
+                            if (promiseValue.substr(i, 1) !== inputText.substr(i, 1)) {
+                                matchIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+                else {
+                    controller.state = EvaluationState.succeeded;
+                    controller.$scope.matchIndex = promiseValue.index;
+                    controller.$scope.inputLines = [];
+                    controller.$scope.matchResult = promiseValue.map((value) => {
+                        if (sys.isNil(value))
+                            return { escapedText: "", isMatch: false, length: 0, text: "" };
+                        let s = angular.toJson(value);
+                        return { escapedText: s.substr(1, s.length - 1), isMatch: true, length: s.length, text: s };
+                    });
+                }
+            }).catch((reason) => {
+                if (inputText !== controller.inputText || isReplaceMode !== controller.isReplaceMode || (controller.isReplaceMode && replacementText !== controller.replacementText) || sys.isNil(controller._parentController.regex) || controller._parentController.regex.source !== regex.source || controller._parentController.regex.flags !== regex.flags)
+                    return;
+                controller.$scope.patternError = (sys.isNil(reason)) ? "An unspecifed error has occurred." : reason;
+                controller.state = EvaluationState.error;
             });
         }
-        evaluationComplete(success, _index) {
-            if (success)
-                this.$scope.noMatches = false;
+        onStateChanged() {
         }
-        deleteItem(index) { EvaluationItem.deleteItem(this.$scope.evaluationInput, index); }
-        editItem(index) { EvaluationItem.editItem(this.$scope.evaluationInput, index); }
+        onIsEditModeChanged() {
+            if (this.isEditMode) {
+                this._parentController.isEditingPattern = false;
+                if (this.$scope.isReplaceMode !== this._isReplaceMode)
+                    this.$scope.isReplaceMode = this._isReplaceMode;
+                if (this.$scope.isMatchMode !== (this._isReplaceMode === false))
+                    this.$scope.isMatchMode = !this._isReplaceMode;
+            }
+            else {
+                if (this.$scope.isReplaceMode !== false)
+                    this.$scope.isReplaceMode = false;
+                if (this.$scope.isMatchMode !== false)
+                    this.$scope.isMatchMode = false;
+            }
+        }
+        onIsReplaceModeChanged() {
+            this.$scope.replacementResult = [];
+            this.$scope.matchResult = [];
+            this.startEvaluation();
+        }
+        onInputTextChanged() {
+            this.startEvaluation();
+        }
+        onReplacementTextChanged() {
+            this.startEvaluation();
+        }
         $doCheck() { }
+        static registerDirective(module) {
+            module.directive(DIRECTIVENAME_TESTDATAITEM, () => ({
+                controller: ["$scope", "$q", "$log", TestDataItemController],
+                controllerAs: DIRECTIVENAME_TESTDATAITEM,
+                link: (scope, element, attr, controller) => {
+                    scope.testDataItem._parentController = controller;
+                    scope.testDataItem.inputText = scope.inputText;
+                    scope.testDataItem.replacementText = scope.replacementText;
+                    scope.testDataItem.isReplaceMode = scope.isReplaceMode;
+                    scope.testDataItem.isEditMode = scope.isEditMode;
+                    scope.isMatchMode = !scope.testDataItem.isReplaceMode;
+                    scope.$watch("isEditMode", () => scope.testDataItem.onIsEditModeChanged());
+                    scope.$watch("state", () => scope.testDataItem.state = scope.state);
+                    scope.$watch("isReplaceMode", () => {
+                        if (scope.isEditMode === true)
+                            scope.testDataItem.isReplaceMode = scope.isReplaceMode;
+                    });
+                    scope.$watch("isMatchMode", () => {
+                        if (scope.isReplaceMode !== (scope.isMatchMode === false))
+                            scope.isMatchMode = (scope.isMatchMode === false);
+                    });
+                    scope.$watch("inputText", () => scope.testDataItem.onInputTextChanged());
+                    scope.$watch("replacementText", () => scope.testDataItem.onReplacementTextChanged());
+                    scope.testDataItem.state = (scope.state === EvaluationState.notEvaluated) ? EvaluationState.notEvaluated : EvaluationState.pending;
+                },
+                require: "^^" + DIRECTIVENAME_REGEXTESTER,
+                restrict: "E",
+                scope: {
+                    index: "=itemIndex",
+                    state: "=",
+                    isEditMode: "=",
+                    isReplaceMode: "=",
+                    inputText: "=",
+                    replacementText: "=",
+                    canDelete: "="
+                },
+                template: '<div ng-class="classNames" ng-transclude></div>',
+                transclude: true
+            }));
+        }
     }
-    class TestStringItem {
+    TestDataItemController.registerDirective(app.mainModule);
+    class ErrorMessageController {
         constructor($scope, $log) {
             this.$scope = $scope;
             this.$log = $log;
-            this._id = Symbol();
-            this._canDelete = false;
-            this._isEditMode = false;
-            $scope.testString = this;
-            $;
+            let errorMessage = this;
+            $scope.$watch("error", () => errorMessage.onErrorChanged());
         }
-        static getParentArray(parentScope) {
-            let testStrings = parentScope.testStrings;
-            if (sys.isNil(testStrings) || !Array.isArray(testStrings))
-                testStrings = [];
-            else if ((testStrings = testStrings.filter((value, i) => {
-                if (sys.isNil(value))
-                    return false;
-                let item = value.testString;
-                return !sys.isNil(item) && typeof item._parentScope !== "undefined";
-            })).length === parentScope.testStrings.length)
-                return parentScope.testStrings;
-            parentScope.testStrings = testStrings;
-            return testStrings;
-        }
-        getIndex() {
-            if (sys.isNil(this._parentScope))
-                return -1;
-            let testStrings = TestStringItem.getParentArray(this._parentScope);
-            for (let i = 0; i < testStrings.length; i++) {
-                if (testStrings[i].testString._id === this._id)
-                    return i;
+        onErrorChanged() {
+            if (sys.isNil(this.$scope.error)) {
+                this.$scope.isVisible = this.$scope.hasDetails = this.$scope.hasName = false;
+                this.$scope.message = this.$scope.name = this.$scope.details = "";
             }
-            this._parentScope = undefined;
-            this._canDelete = false;
-            return -1;
-        }
-        removeCurrent() {
-            if (!this._canDelete)
-                return;
-            let index = this.getIndex();
-            if (index < 0)
-                return;
-            if (index === 0)
-                this._parentScope.testStrings.shift();
-            else if (index === this._parentScope.testStrings.length - 1)
-                this._parentScope.testStrings.pop();
-            else
-                this._parentScope.testStrings.splice(index, 1);
-            if (this._parentScope.testStrings.length == 1)
-                this._parentScope.testStrings[0].testString._canDelete = false;
-            this._canDelete = false;
-            this._parentScope = undefined;
-        }
-        static push(parentScope, log) {
-            let item = new TestStringItem(parentScope.$new(), log);
-            item._parentScope = parentScope;
-            let testStrings = TestStringItem.getParentArray(parentScope);
-            testStrings.push(item.$scope);
-            if (testStrings.length == 2)
-                testStrings[0].testString._canDelete = true;
-            return item;
-        }
-        static startExec(parentScope, regExp, $q, patternText, flags) {
-            if (sys.isNil(regExp)) {
-                TestStringItem.getParentArray(parentScope).forEach(($scope) => { $scope.testString.setNotEvaluated(); });
-                return;
-            }
-            TestStringItem.getParentArray(parentScope).forEach(($scope, index) => {
-                let item = $scope.testString;
-                let regexTester = item._parentScope.regexTester;
-                $q((resolve, reject) => {
-                    if (sys.isNil(item._parentScope) || patternText !== regexTester.patternText || flags !== regexTester.flags)
-                        resolve(undefined);
-                    else {
-                        let result;
-                        try {
-                            if ($scope.isReplaceMode)
-                                result = $scope.inputText.replace(regExp, $scope.replacementText);
-                            else
-                                result = regExp.exec($scope.inputText);
-                        }
-                        catch (e) {
-                            reject(e);
-                            return;
-                        }
-                        if (sys.isNil(result) && $scope.isReplaceMode)
-                            reject("Failed to evaluate regular expression.");
-                        else
-                            resolve(result);
-                    }
-                }).then((result) => {
-                    if (typeof result === "undefined" || sys.isNil(item._parentScope) || patternText !== regexTester.patternText || flags !== regexTester.flags)
-                        return;
-                    // TODO: Process result
-                }, (reason) => {
-                    if (sys.isNil(item._parentScope) || patternText !== regexTester.patternText || flags !== regexTester.flags)
-                        return;
-                    reason = sys.asErrorResult((sys.isNil(reason)) ? "" : reason);
-                    if (item._parentScope.pattern.isValid) {
-                        item._parentScope.pattern.isValid = false;
-                        if (typeof reason === "string")
-                            item._parentScope.pattern = {
-                                displayText: item._parentScope.pattern.displayText, errorMessage: (reason.trim().length == 0) ? "An unknown error has occurred while evaluating expression " + (index + 1) + "" : "Error evaluating expression " + (index + 1) + ": " + reason, isValid: false, errorDetail: "", hasErrorDetail: false
-                            };
-                        else {
-                            let message = sys.asString(reason.message, "").trim();
-                            let detail = "";
-                            if (message.length == 0 && (message = sys.asString(reason.name, "").trim()).length == 0)
-                                item._parentScope.pattern = { displayText: item._parentScope.pattern.displayText, errorMessage: "An unknown error has occurred while evaluating expression " + (index + 1) + "", isValid: false, errorDetail: angular.toJson(reason), hasErrorDetail: true };
-                            else if (sys.isNil(reason.data))
-                                item._parentScope.pattern = { displayText: item._parentScope.pattern.displayText, errorMessage: "Error evaluating expression " + (index + 1) + ": " + message, isValid: false, errorDetail: "", hasErrorDetail: false };
-                            else
-                                item._parentScope.pattern = { displayText: item._parentScope.pattern.displayText, errorMessage: "Error evaluating expression " + (index + 1) + ": " + message, isValid: false, errorDetail: angular.toJson(reason.data), hasErrorDetail: true };
-                        }
+            else {
+                if (typeof this.$scope.error === "string") {
+                    this.$scope.hasDetails = this.$scope.hasName = false;
+                    this.$scope.name = this.$scope.details = "";
+                    this.$scope.message = this.$scope.error;
+                }
+                else {
+                    let value;
+                    value = this.$scope.error.name;
+                    this.$scope.name = (typeof value === "string") ? value.trim() : "";
+                    this.$scope.hasName = this.$scope.name.length > 0;
+                    value = this.$scope.error.message;
+                    if (typeof value === "string" && (value = value.trim()).length > 0)
+                        this.$scope.message = value;
+                    else if (this.$scope.name.length > 0) {
+                        this.$scope.message = this.$scope.name;
+                        this.$scope.hasName = false;
+                        this.$scope.name = "";
                     }
                     else {
-                        // TODO: Add error for current item.
+                        this.$scope.message = angular.toJson(this.$scope.error);
+                        this.$scope.name = this.$scope.details = "";
+                        this.$scope.hasName = this.$scope.hasDetails = false;
+                        return;
                     }
-                });
-            });
+                    value = this.$scope.error.data;
+                    this.$scope.details = (sys.isNil(value)) ? "" : ((typeof value === "string") ? value.trim() : angular.toJson(value));
+                    this.$scope.hasDetails = this.$scope.details.length > 0;
+                }
+                this.$scope.isVisible = true;
+            }
         }
-        setNotEvaluated() {
-            throw new Error("Method not implemented.");
+        $doCheck() { }
+        static registerDirective(module) {
+            module.directive(DIRECTIVENAME_ERRORMESSAGE, () => ({
+                controller: ["$scope", "$log", ErrorMessageController],
+                controllerAs: DIRECTIVENAME_ERRORMESSAGE,
+                link: (scope, element, attr) => { scope.errorMessage.onErrorChanged(); },
+                restrict: "E",
+                scope: { error: "=" },
+                template: '<div ng-show="isVisible"><strong ng-show="hasName">{{name}}: </strong>{{message}}<div class="small pre-scrollable" ng-show="hasDetails">{{details}}</div></div>'
+            }));
         }
     }
-    // #endregion
-    // #region regexTesterController
-    const PATTERN_FLAG_SYMBOLS = { global: "g", ignoreCase: "i", multiline: "m", unicode: "u", sticky: "y" };
-    const PATTERN_FLAG_NAMES = Object.getOwnPropertyNames(PATTERN_FLAG_SYMBOLS);
-    class RegexTesterController {
+    ErrorMessageController.registerDirective(app.mainModule);
+    class RegexPatternController {
         constructor($scope, $q, $log) {
             this.$scope = $scope;
             this.$q = $q;
             this.$log = $log;
+            this._isEditMode = false;
+            this._isMultiLineMode = false;
+            this._ignoreWhitespace = false;
             this._flags = "";
             this._patternText = "";
-            this._changeLevel = 0;
-            this._patternRebuildReqd = false;
-            $scope.regexTester = this;
-            $scope.isEditPatternMode = true;
-            $scope.ignoreWhitespace = false;
-            $scope.patternIsMultiLine = false;
-            $scope.singleLinePatternText = $scope.multiLinePatternText = this._patternText;
-            $scope.patternLineCount = TEXTAREA_ROW_COUNT_DEFAULT;
-            $scope.global = false;
-            $scope.ignoreCase = false;
-            $scope.multiline = false;
-            $scope.sticky = false;
-            $scope.unicode = false;
-            $scope.pattern = { displayText: "", errorMessage: "Expression not parsed", isValid: false, errorDetail: "", hasErrorDetail: false };
-            TestStringItem.push($scope, $log);
-            $scope.$watchGroup(PATTERN_FLAG_NAMES, () => {
-                this._changeLevel++;
-                try {
-                    let flags = (this.$scope.ignoreCase) ? "i" : "";
-                    if (this.$scope.global)
-                        flags += "g";
-                    if (this.$scope.multiline)
-                        flags += "m";
-                    if (this.$scope.unicode)
-                        flags += "u";
-                    if (this.$scope.sticky)
-                        flags += "y";
-                    if (flags !== this._flags) {
-                        this.$scope.flags = this._flags = flags;
-                        this._patternRebuildReqd = true;
-                    }
-                }
-                finally {
-                    this._changeLevel--;
-                }
-                if (this._changeLevel == 0 && this._patternRebuildReqd)
-                    this.startPatternRebuild();
-            });
-            $scope.$watch("patternIsMultiLine", () => {
-                this._changeLevel++;
-                try {
-                    if (this.$scope.patternIsMultiLine) {
-                        if (this.$scope.multiLinePatternText !== this.$scope.singleLinePatternText)
-                            this.$scope.multiLinePatternText = this.$scope.singleLinePatternText;
-                    }
-                    else {
-                        let s = sys.asString(this.$scope.multiLinePatternText, "").replace(NEWLINE_REGEX, "");
-                        if (s !== this.$scope.singleLinePatternText)
-                            this.$scope.singleLinePatternText = s;
-                    }
-                }
-                finally {
-                    this._changeLevel--;
-                }
-                if (this._changeLevel == 0 && this._patternRebuildReqd)
-                    this.startPatternRebuild();
-            });
-            $scope.$watch("ignoreWhitespace", () => {
-                if (!this.$scope.ignoreWhitespace)
-                    return;
-                this._changeLevel++;
-                try {
-                    let s = sys.asString(this.$scope.singleLinePatternText, "").replace(WHITESPACE_REGEX, "");
-                    this.$scope.patternIsMultiLine = false;
-                    if (s !== this.$scope.singleLinePatternText)
-                        this.$scope.singleLinePatternText = s;
-                }
-                finally {
-                    this._changeLevel--;
-                }
-                if (this._changeLevel == 0 && this._patternRebuildReqd)
-                    this.startPatternRebuild();
-            });
-            $scope.$watch("multiLinePatternText", () => {
-                if (!this.$scope.patternIsMultiLine)
-                    return;
-                this._changeLevel++;
-                try {
-                    let s = sys.asString(this.$scope.multiLinePatternText, "").replace(WHITESPACE_REGEX, "");
-                    if (s !== this._patternText) {
-                        this._patternText = s;
-                        this._patternRebuildReqd = true;
-                    }
-                }
-                finally {
-                    this._changeLevel--;
-                }
-                if (this._changeLevel == 0 && this._patternRebuildReqd)
-                    this.startPatternRebuild();
-            });
-            $scope.$watch("singleLinePatternText", () => {
-                if (this.$scope.patternIsMultiLine)
-                    return;
-                this._changeLevel++;
-                try {
-                    let s = (this.$scope.ignoreWhitespace) ? sys.asString(this.$scope.singleLinePatternText, "").replace(WHITESPACE_REGEX, "") : sys.asString(this.$scope.singleLinePatternText, "");
-                    if (s !== this._patternText) {
-                        this._patternText = s;
-                        this._patternRebuildReqd = true;
-                    }
-                }
-                finally {
-                    this._changeLevel--;
-                }
-                if (this._changeLevel == 0 && this._patternRebuildReqd)
-                    this.startPatternRebuild();
-            });
+            this._singleLinePatternText = "";
+            this._multiLinePatternText = "";
+            this._isOptionsDialogVisible = false;
+            $scope.regexPattern = this;
+            $scope.isOptionsDialogVisible = false;
+            $scope.flags = $scope.singleLinePatternText = $scope.multiLinePatternText = $scope.patternText = $scope.patternDisplayText = "";
+            $scope.multiLineRowCount = TEXTAREA_ROW_COUNT_DEFAULT;
+            $scope.isMultiLineMode = $scope.ignoreWhitespace = this._isMultiLineMode;
+            $scope.isSingleLineMode = !this._isMultiLineMode;
+            $scope.singleLinePatternTextBoxId = CONTROL_ID_SINGLELINEPATTERNTEXTBOX;
+            $scope.multiLinePatternTextBoxId = CONTROL_ID_MULTILINEPATTERNTEXTBOX;
+            this.onIsMultiLineModeChanged();
+            this.onIgnoreWhitespaceChanged();
+            let controller = this;
+            $scope.$watch("ignoreWhitespace", () => { controller.ignoreWhitespace = controller.$scope.ignoreWhitespace; });
+            $scope.$watch("flags", () => { controller.flags = controller.$scope.flags; });
+            $scope.$watch("isMultiLineMode", () => { controller.isMultiLineMode = controller.$scope.isMultiLineMode; });
+            $scope.$watch("isSingleLineMode", () => { controller.isMultiLineMode = controller.$scope.isSingleLineMode !== true; });
+            $scope.$watch("isEditMode", () => { controller.isEditMode = controller.$scope.isEditMode; });
+            $scope.$watch("singleLinePatternText", () => { controller.singleLinePatternText = controller.$scope.singleLinePatternText; });
+            $scope.$watch("multiLinePatternText", () => { controller.multiLinePatternText = controller.$scope.multiLinePatternText; });
+            this.startParseRegex(this.$scope.patternText, this.$scope.flags);
         }
-        get expression() { return this._expression; }
-        get flags() { return this._flags; }
-        get patternText() { return this._patternText; }
-        editPatternText(event) {
-            if (this.$scope.isEditPatternMode !== true) {
+        get isEditMode() { return this._isEditMode; }
+        set isEditMode(value) {
+            let notChanged = ((value = value === true) === this._isEditMode);
+            this._isEditMode = value;
+            if (this.$scope.isEditMode !== value)
+                this.$scope.isEditMode = value;
+            if (notChanged)
+                return;
+            if (value) {
+                if (this.$scope.isMultiLineMode !== this._isMultiLineMode)
+                    this.$scope.isMultiLineMode = this._isMultiLineMode;
+                if (this.$scope.isSingleLineMode !== (this._isMultiLineMode === false))
+                    this.$scope.isSingleLineMode = !this._isMultiLineMode;
+            }
+            else {
+                if (this.$scope.isOptionsDialogVisible !== false)
+                    this.$scope.isOptionsDialogVisible = false;
+                if (this.$scope.isSingleLineMode !== false)
+                    this.$scope.isSingleLineMode = false;
+                if (this.$scope.isMultiLineMode !== false)
+                    this.$scope.isMultiLineMode = false;
             }
         }
-        incrementPatternLineCount(event) {
+        get isMultiLineMode() { return (this.$scope.isEditMode) ? this.$scope.isMultiLineMode : this._isMultiLineMode; }
+        set isMultiLineMode(value) {
+            let isChanged = ((value = value === true) !== this._isMultiLineMode);
+            this._isMultiLineMode = value;
+            if (this.$scope.isEditMode) {
+                if (this.$scope.isMultiLineMode !== value)
+                    this.$scope.isMultiLineMode = value;
+                if (this.$scope.isSingleLineMode !== (value === false))
+                    this.$scope.isSingleLineMode = !value;
+            }
+            if (isChanged)
+                this.onIsMultiLineModeChanged();
         }
-        decrementPatternLineCount(event) {
+        get ignoreWhitespace() { return this._ignoreWhitespace; }
+        set ignoreWhitespace(value) {
+            let isChanged = ((value = value === true) !== this._ignoreWhitespace);
+            this._ignoreWhitespace = value;
+            if (this.$scope.ignoreWhitespace !== value)
+                this.$scope.ignoreWhitespace = value;
+            if (isChanged)
+                this.onIgnoreWhitespaceChanged();
         }
-        $doCheck() { }
-        startPatternRebuild() {
-            let patternText = this._patternText;
-            let flags = this._flags;
-            this._patternRebuildReqd = false;
-            let expression = this._expression;
+        get flags() { return this._flags; }
+        set flags(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._flags);
+            this._flags = value;
+            if (this.$scope.flags !== value)
+                this.$scope.flags = value;
+            if (isChanged)
+                this.startParseRegex(this.patternText, this.flags);
+        }
+        get patternText() { return this._patternText; }
+        set patternText(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._patternText);
+            this._patternText = value;
+            if (this.$scope.patternText !== value)
+                this.$scope.patternText = value;
+            if (isChanged)
+                this.startParseRegex(this.patternText, this.flags);
+        }
+        get singleLinePatternText() { return this._singleLinePatternText; }
+        set singleLinePatternText(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._singleLinePatternText);
+            this._singleLinePatternText = value;
+            if (this.$scope.singleLinePatternText !== value)
+                this.$scope.singleLinePatternText = value;
+            if (isChanged && !this.isMultiLineMode)
+                this.patternText = (this.ignoreWhitespace) ? value.replace(WHITESPACE_REGEX, "") : value;
+        }
+        get multiLinePatternText() { return this._multiLinePatternText; }
+        set multiLinePatternText(value) {
+            if (typeof value !== "string")
+                value = "";
+            let isChanged = (value !== this._multiLinePatternText);
+            this._multiLinePatternText = value;
+            if (this.$scope.multiLinePatternText !== value)
+                this.$scope.multiLinePatternText = value;
+            if (isChanged && this.isMultiLineMode)
+                this.patternText = value.replace(WHITESPACE_REGEX, "");
+        }
+        startParseRegex(pattern, flags) {
+            let controller = this;
             this.$q((resolve, reject) => {
-                if (patternText !== this._patternText || flags !== this._flags)
+                if (controller.patternText !== pattern || controller.flags !== flags) {
                     resolve(undefined);
-                else {
-                    let re;
-                    try {
-                        re = new RegExp(patternText, flags);
-                    }
-                    catch (e) {
-                        reject(e);
-                        return;
-                    }
-                    if (sys.isNil(re))
-                        reject("Failed to parse regular expression.");
-                    else
-                        resolve(re);
-                }
-            }).then((result) => {
-                if (typeof result === "undefined" || patternText !== this._patternText || flags !== this._flags)
                     return;
-                this._expression = result;
-                this.$scope.pattern = { displayText: result.toString(), errorMessage: "", isValid: true, errorDetail: "", hasErrorDetail: false };
-                TestStringItem.startExec(this.$scope, result, this.$q, patternText, flags);
-            }, (reason) => {
-                if (patternText !== this._patternText || flags !== this._flags)
-                    return;
-                let nodes = patternText.split("\\\\");
-                if (nodes[nodes.length - 1].endsWith("\\"))
-                    patternText += "\\";
-                let displayText = "/" + patternText.split("\\/").map((v) => v.replace("/", "\\/")).join("\\/") + "/" + flags;
-                reason = sys.asErrorResult((sys.isNil(reason)) ? "" : reason);
-                if (typeof reason === "string")
-                    this.$scope.pattern = { displayText: displayText, errorMessage: (reason.trim().length == 0) ? "An unknown error has occurred." : reason, isValid: false, errorDetail: "", hasErrorDetail: false };
-                else {
-                    let message = sys.asString(reason.message, "").trim();
-                    let detail = "";
-                    if (message.length == 0 && (message = sys.asString(reason.name, "").trim()).length == 0)
-                        this.$scope.pattern = { displayText: displayText, errorMessage: "An unknown error has occurred.", isValid: false, errorDetail: angular.toJson(reason), hasErrorDetail: true };
-                    else if (sys.isNil(reason.data))
-                        this.$scope.pattern = { displayText: displayText, errorMessage: message, isValid: false, errorDetail: "", hasErrorDetail: false };
-                    else
-                        this.$scope.pattern = { displayText: displayText, errorMessage: message, isValid: false, errorDetail: angular.toJson(reason.data), hasErrorDetail: true };
                 }
-                if (typeof expression !== "undefined")
-                    TestStringItem.startExec(this.$scope, undefined, this.$q, patternText, flags);
+                let regexp;
+                try {
+                    regexp = new RegExp(pattern, flags);
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                if (sys.isNil(regexp))
+                    reject("Could not parse pattern");
+                else
+                    resolve(regexp);
+            }).then((promiseValue) => {
+                if (sys.isNil(promiseValue) || controller.patternText !== pattern || controller.flags !== flags)
+                    return;
+                if (!sys.isNil(controller.$scope.patternError))
+                    controller.$scope.patternError = undefined;
+                let patternDisplayText = promiseValue.toString();
+                if (patternDisplayText !== controller.$scope.patternDisplayText) {
+                    controller.$scope.patternDisplayText = patternDisplayText;
+                    controller.$scope.regex = promiseValue;
+                }
+            }).catch((reason) => {
+                if (controller.patternText !== pattern || controller.flags !== flags)
+                    return;
+                if (controller.$scope.regex !== null)
+                    controller.$scope.regex = null;
+                controller.$scope.patternError = (sys.isNil(reason)) ? "An unspecifed error has occurred." : reason;
+                let index = pattern.indexOf("\\");
+                let patternDisplayText;
+                if (index < 0)
+                    patternDisplayText = pattern.replace("/", "\\");
+                else {
+                    do {
+                        if (index > 0)
+                            patternDisplayText += pattern.substr(0, index).replace("/", "\\/");
+                        if (index === pattern.length - 1) {
+                            patternDisplayText += pattern + "\\";
+                            pattern = "";
+                            break;
+                        }
+                        patternDisplayText += pattern.substr(index, 2);
+                        pattern = pattern.substr(index + 2);
+                        index = pattern.indexOf("\\");
+                    } while (index > -1);
+                    if (pattern.length > 0)
+                        patternDisplayText += pattern.replace("/", "\\/");
+                }
+                pattern = "/" + pattern + "/" + flags;
+                if (patternDisplayText !== controller.$scope.patternDisplayText)
+                    controller.$scope.patternDisplayText = patternDisplayText;
             });
         }
+        openOptionsDialog(event) {
+            preventDefault(event);
+            if (this.$scope.isOptionsDialogVisible !== true && this.$scope.isEditMode === true)
+                this.$scope.isOptionsDialogVisible = true;
+        }
+        editPattern(event) {
+            preventDefault(event);
+            this.isEditMode = true;
+        }
+        addPatternRow(event) {
+            preventDefault(event);
+            if (this.$scope.multiLineRowCount < TEXTAREA_ROW_COUNT_MAX && ++this.$scope.multiLineRowCount === 2)
+                this.isMultiLineMode = true;
+        }
+        removePatternRow(event) {
+            preventDefault(event);
+            if (this.$scope.multiLineRowCount > 1 && --this.$scope.multiLineRowCount == 1)
+                this.isMultiLineMode = false;
+        }
+        onIgnoreWhitespaceChanged() {
+            if (this.ignoreWhitespace)
+                return;
+            if (this.isMultiLineMode)
+                this.isMultiLineMode = false;
+            else
+                this.singleLinePatternText = this.singleLinePatternText.replace(WHITESPACE_REGEX, "");
+        }
+        onIsMultiLineModeChanged() {
+            if (this.isMultiLineMode) {
+                if (this.$scope.multiLineRowCount === 1)
+                    this.$scope.multiLineRowCount = TEXTAREA_ROW_COUNT_DEFAULT;
+                this.ignoreWhitespace = true;
+                this.$scope.patternTextBoxLabelId = CONTROL_ID_MULTILINEPATTERNTEXTBOX;
+                this.multiLinePatternText = this.singleLinePatternText;
+                this.$scope.canRemovePatternRow = true;
+                this.$scope.canAddPatternRow = this.$scope.multiLineRowCount < TEXTAREA_ROW_COUNT_MAX;
+            }
+            else {
+                this.$scope.canRemovePatternRow = false;
+                this.$scope.canAddPatternRow = true;
+                this.$scope.patternTextBoxLabelId = CONTROL_ID_SINGLELINEPATTERNTEXTBOX;
+                this.singleLinePatternText = this.multiLinePatternText.replace((this.ignoreWhitespace) ? WHITESPACE_REGEX : NEWLINE_REGEX, "");
+            }
+        }
+        $doCheck() { }
+        static registerDirective(module) {
+            module.directive(DIRECTIVENAME_REGEXTESTER, () => ({
+                controller: ["$scope", "$q", "$log", RegexPatternController],
+                controllerAs: DIRECTIVENAME_REGEXPATTERN,
+                // link: (scope: IRegexPatternScope, element: JQuery, attr: ng.IAttributes) => { },
+                restrict: "E",
+                scope: {
+                    regex: "=",
+                    isEditMode: "="
+                },
+                template: '<ng-transclude></ng-transclude>',
+                transclude: true
+            }));
+        }
     }
-    app.mainModule.controller("regexTesterController", ["$scope", "$q", "$log", RegexTesterController]);
+    RegexPatternController.registerDirective(app.mainModule);
+    class RegexOptionsController {
+        constructor($scope, $log) {
+            this.$scope = $scope;
+            this.$log = $log;
+            this._ignoreFlagChange = false;
+            this._isDialogVisible = false;
+            let regexOptions = this;
+            $scope.$watch("isDialogVisible", (newValue) => { regexOptions.setDialogVisibility(newValue); });
+            $scope.$watch("flags", (newValue) => { regexOptions.onFlagsChanged(newValue); });
+            $scope.$watchGroup(PATTERN_FLAG_NAMES, () => {
+                if (!regexOptions._ignoreFlagChange)
+                    regexOptions.updateFlags();
+            });
+            this.onFlagsChanged($scope.flags);
+            this.setDialogVisibility($scope.isDialogVisible);
+        }
+        $doCheck() { }
+        onFlagsChanged(flags) {
+            if (this._ignoreFlagChange)
+                return;
+            this._ignoreFlagChange = true;
+            try {
+                if (typeof flags !== "string" || (flags = flags.trim()).length === 0)
+                    PATTERN_FLAG_NAMES.forEach((n) => { this.$scope[n] = false; });
+                else
+                    PATTERN_FLAG_NAMES.forEach((n) => { this.$scope[n] = flags.indexOf(PATTERN_FLAG_SYMBOLS[n]) > -1; });
+                this.updateFlags();
+            }
+            finally {
+                this._ignoreFlagChange = false;
+            }
+        }
+        updateFlags() {
+            let flags = PATTERN_FLAG_NAMES.map((n) => (this.$scope[n]) ? PATTERN_FLAG_SYMBOLS[n] : "").join("");
+            if (this.$scope.flags !== flags)
+                this.$scope.flags = flags;
+        }
+        setDialogVisibility(isVisible, event) {
+            preventDefault(event);
+            if ((isVisible = isVisible === true) === this._isDialogVisible)
+                return;
+            this._isDialogVisible = isVisible;
+            if (this.$scope.isDialogVisible !== isVisible)
+                this.$scope.isDialogVisible = isVisible;
+            $(CONTROL_ID_PATTERNOPTIONSMODAL).modal({ show: isVisible });
+        }
+        static registerDirective(module) {
+            module.directive(DIRECTIVENAME_REGEXOPTIONS, () => ({
+                controller: ["$scope", "$log", RegexOptionsController],
+                controllerAs: DIRECTIVENAME_REGEXOPTIONS,
+                restrict: "E",
+                scope: {
+                    isDialogVisible: "=",
+                    ignoreWhitespace: "=",
+                    flags: "="
+                },
+                template: '<div class="modal fade" id="' + CONTROL_ID_PATTERNOPTIONSMODAL + '" tabindex="-1" role="dialog" aria-labelledby="patternOptionsLabel" aria-hidden="true"><div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="patternOptionsLabel">Pattern Options</h5><button type="button" class="close" aria-label="Close" ng-click="regexOptions.setDialogVisibility(false, $event)"><span aria-hidden="true">&times;</span></button></div><div class="modal-body" ng-transclude></div><div class="modal-footer"><button type="button" class="btn btn-secondary" ng-click="regexOptions.setDialogVisibility(false, $event)">Close</button></div></div></div></div>',
+                transclude: true
+            }));
+        }
+    }
+    RegexOptionsController.registerDirective(app.mainModule);
+    class RegexTesterController {
+        constructor($scope, $log) {
+            this.$scope = $scope;
+            this.$log = $log;
+            this._isEditingPattern = true;
+            $scope.isEditingPattern = true;
+            this.addItem();
+            let controller = this;
+            $scope.$watch("isEditingPattern", () => { controller.isEditingPattern = $scope.isEditingPattern; });
+        }
+        get regex() { return this.$scope.regex; }
+        get isEditingPattern() { return this._isEditingPattern; }
+        set isEditingPattern(value) {
+            let isChanged = ((value = value === true) !== this._isEditingPattern);
+            this._isEditingPattern = value;
+            if (value !== this.$scope.isEditingPattern)
+                this.$scope.isEditingPattern = value;
+            if (isChanged && value)
+                this.$scope.testData = this.$scope.testData.map((value) => ({ inputText: value.inputText, isEditMode: false, isReplaceMode: value.isReplaceMode, replacementText: value.replacementText, state: value.state, canDelete: value.canDelete }));
+        }
+        deleteItem(index) {
+            if (index < 0 || index >= this.$scope.testData.length || this.$scope.testData.length < 2)
+                return;
+            let isEditMode = this.$scope.testData[index].isEditMode;
+            this.$scope.testData = this.$scope.testData.filter((value, i) => i !== index);
+            if (this.$scope.testData.length == 1)
+                this.$scope.testData[0].canDelete = false;
+            if (isEditMode)
+                this.editItem((index < this.$scope.testData.length) ? index : index - 1);
+        }
+        editItem(index) {
+            if (index > -1 && index < this.$scope.testData.length)
+                this.$scope.testData = this.$scope.testData.map((value, i) => ({ inputText: value.inputText, isEditMode: i === index, isReplaceMode: value.isReplaceMode, replacementText: value.replacementText, state: value.state, canDelete: value.canDelete }));
+        }
+        addItem(event) {
+            preventDefault(event);
+            if (sys.isNil(this.$scope.testData) || this.$scope.testData.length == 0)
+                this.$scope.testData = [{ inputText: "", isEditMode: false, isReplaceMode: false, replacementText: "", state: (sys.isNil(this.$scope.regex)) ? EvaluationState.notEvaluated : EvaluationState.pending, canDelete: false }];
+            else {
+                this.$scope.testData = this.$scope.testData.concat([{ inputText: "", isEditMode: false, isReplaceMode: false, replacementText: "", state: (sys.isNil(this.$scope.regex)) ? EvaluationState.notEvaluated : EvaluationState.pending, canDelete: true }]);
+                if (this.$scope.testData.length == 2)
+                    this.$scope.testData[0].canDelete = true;
+                this.editItem(this.$scope.testData.length - 1);
+            }
+        }
+        $doCheck() { }
+    }
+    app.mainModule.controller("regexTester", ["$scope", "$log", RegexTesterController]);
     // #endregion
 })(regexTester || (regexTester = {}));
 //# sourceMappingURL=RegexTester.js.map
