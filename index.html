@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:ng="http://angularjs.org" xmlns:app="https://lerwine.github.io/Schema/App.xsd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:ng="http://angularjs.org">
 <head>
     <meta name="viewport" content="width=1024, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <meta charset="utf-8" />
-    <title>Lenny's Pages</title>
+    <meta name="myGitHubPages:pageId" content="Home" />
+    <title>Lenny's Git Repositories</title>
     <link rel="stylesheet" href="lib/twitter-bootstrap/css/bootstrap.css" type="text/css" />
     <link rel="stylesheet" href="lib/angular.js/angular-csp.css" type="text/css" />
     <link rel="stylesheet" href="app.css" type="text/css" />
@@ -12,118 +13,28 @@
     <script src="lib/jquery/jquery.js"></script>
     <script src="lib/twitter-bootstrap/js/bootstrap.bundle.js"></script>
     <script src="lib/angular.js/angular.js"></script>
-    <script src="App/sys.js"></script>
-    <script src="App/app.js"></script>
+    <script src="lib/angular.js/angular-route.js"></script>
+    <script src="app.js"></script>
+    <script src="home/home.js"></script>
+    <script src="regexTester/regexTester.js"></script>
 </head>
-<body ng-app="mainModule">
-    <app:top-nav-and-header header-text="Lenny's Pages" page-name="home"></app:top-nav-and-header>
-    <section class="container-fluid">
-        <div class="card">
-            <div class="card-header"><h2>Technology Links</h2></div>
-            <div class="card-body">
-                <ul>
-                    <li><a href="https://www.typescriptlang.org/docs/home.html" target="_blank">TypeScript Documentation</a></li>
-                    <li>
-                        JavaScript
-                        <ul>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">Language Reference (Mozilla Developer Network)</a></li>
-                            <li><a href="http://msdn.microsoft.com/en-us/library/ie/d1et7k7c(v=vs.94).aspx" target="_blank">Language Reference (Microsoft Developer Network)</a></li>
-                            <li><a href="https://docs.angularjs.org" target="_blank">AngularJS Documentation</a></li>
-                            <li><a href="http://api.jquery.com" target="_blank">jQuery API Documentation</a></li>
-                            <li><a href="https://www.w3.org/TR/webstorage" target="_blank">Web Storage API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Storage_API" target="_blank">Storage API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Encoding_API" target="_blank">Encoding API</a></li>
-                            <li><a href="https://www.w3.org/TR/FileAPI" target="_blank">File API (W3C)</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/File" target="_blank">File API (Mozilla Developer Network)</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader" target="_blank">FileReader API</a></li>
-                            <li><a href="https://www.w3.org/TR/WebCryptoAPI" target="_blank">Web Cryptography API</a></li>
-                            <li><a href="https://www.w3.org/TR/workers" target="_blank">Web Workers API</a></li>
-                            <li><a href="https://www.w3.org/TR/IndexedDB" target="_blank">Indexed Database API (W3C)</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API" target="_blank">Indexed Database API (Mozilla Developer Network)</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Streams_API" target="_blank">Streams API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/URL" target="_blank">URL API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API" target="_blank">Canvas API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API" target="_blank">Service Worker API</a></li>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API" target="_blank">Web Workers API</a></li>
-                            <li><a href="https://streams.spec.whatwg.org" target="_blank">Data Streams</a></li>
-                            <li><a href="https://storage.spec.whatwg.org" target="_blank">Storage Standard</a></li>
-                            <li><a href="https://xhr.spec.whatwg.org/" target="_blank">XHR Specification</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        CSS
-                        <ul>
-                            <li><a href="http://getbootstrap.com/docs/4.0" target="_blank">Bootstrap 4.0</a></li>
-                            <li><a href="https://www.w3.org/TR/CSS/#css" target="_blank">CSS (W3C)</a></li>
-                            <li>
-                                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank">CSS (Mozilla Developer Network)</a>
-                                <ul>
-                                    <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/CSS_Object_Model" target="_blank">Object Model</a></li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </li>
-                    <li>
-                        HTML
-                        <ul>
-                            <li><a href="https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5" target="_blank"></a>HTML5 (Mozilla Developer Network)</li>
-                            <li>
-                                <a href="https://www.w3.org/TR/html" target="_blank"></a>HTML5 (W3C)
-                                <ul>
-                                    <li><a href="https://www.w3.org/TR/dom" target="_blank">DOM</a></li>
-                                    <li><a href="https://www.w3.org/TR/html-aria" target="_blank">ARIA in HTML</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="https://msdn.microsoft.com/en-us/library/hh673546(v=vs.85).aspx" target="_blank"></a>HTML5 (Microsoft  Developer Network)</li>
-                        </ul>
-                    </li>
-                    <li>
-                        XML
-                        <ul>
-                            <li>
-                                <a href="https://www.w3.org/standards/xml" target="_blank">XML Standards (W3C)</a>
-                                <ul>
-                                    <li><a href="http://www.w3.org/TR/xml" target="_blank">XML 1.0</a></li>
-                                    <li><a href="http://www.w3.org/TR/xml11" target="_blank">XML 1.1</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="https://docs.microsoft.com/en-us/previous-versions/dotnet/netframework-4.0/ms256177(v=vs.100)" target="_blank">XML Standards Reference (Microsoft  Developer Network)</a></li>
-                            <li>
-                                XPath
-                                <ul>
-                                    <li>
-                                        <a href="https://www.w3.org/TR/xpath" target="_blank">XPath (W3C)</a>
-                                        <ul>
-                                            <li><a href="https://www.w3.org/TR/xpath-functions/" target="_blank">XPath and XQuery Functions and Operators</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="https://developer.mozilla.org/en-US/docs/Web/XPath" target="_blank">XPath (Mozilla Developer Network)</a></li>
-                                    <li><a href="http://msdn.microsoft.com/en-us/library/ms256471.aspx" target="_blank">XPath (Microsoft  Developer Network)</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="https://www.w3.org/TR/xpath-datamodel" target="_blank">XQuery and XPath Data Model</a></li>
-                            <li>
-                                XSLT
-                                <ul>
-                                    <li><a href="https://www.w3.org/TR/xslt-30/" target="_blank">XSLT (W3C)</a></li>
-                                </ul>
-                            </li>
-                            <li>
-                                Xml Schema
-                                <ul>
-                                    <li><a href="https://www.w3.org/TR/xmlschema11-1" target="_blank">XSD 1.1, Part 1 (W3C)</a></li>
-                                    <li><a href="https://www.w3.org/TR/xmlschema11-2" target="_blank">XSD 1.1, Part 2 (W3C)</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="http://commons.apache.org/proper/commons-jelly/overview.html" target="_blank">Jelly - Jelly Overview</a></li>
-                        </ul>
-                    </li>
-                    <li><a href="https://developer.mozilla.org/en-US/docs/Web" target="_blank">Web technology for developers (Mozilla Developer Network)</a></li>
-                    <li><a href="https://url.spec.whatwg.org/" target="_blank">URL Specification</a></li>
-                </ul>
-            </div>
-        </div>
-    </section>
-    <footer class="container-fluid ">&copy; Leonard T. Erwine 2019.</footer>
+<body ng-app="MyGitHubPages" ng-controller="mainContentController">
+    <header class="container-fluid p-1">
+        <h1>{{ pageTitle }}</h1>
+        <h2 ng-show="showSubtitle">{{ subTitle }}</h2>
+        <nav class="container-fluid navbar navbar-expand-sm p-1 mr-auto">
+            <ul class="navbar-nav">
+                <li class="nav-item"><a href="#!/home" class="nav-link">Home</a></li>
+                <li class="nav-item"><a href="#!/git" class="nav-link">Git</a></li>
+                <li class="nav-item"><a href="#!/vscode" class="nav-link">VS Code</a></li>
+                <li class="nav-item"><a href="#!/npm" class="nav-link">npm</a></li>
+                <li class="nav-item"><a href="{{regexHref}}" class="nav-link">Regex</a></li>
+                <li class="nav-item"><a href="#!/uri" class="nav-link">URI</a></li>
+                <li class="nav-item"><a href="#!/color" class="nav-link">Colors</a></li>
+            </ul>
+        </nav>
+    </header>
+    <ng-view></ng-view>
+    <footer class="container-fluid">&copy; Leonard T. Erwine 2019.</footer>
 </body>
 </html>

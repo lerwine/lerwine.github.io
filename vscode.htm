@@ -1,0 +1,93 @@
+<div class="card">
+    <div class="card-header"><h3>My Typical Initial Setup</h3></div>
+    <div class="card-body">
+        Before installing Visual Studio Code, I found that things go smoother if I install a few things, first:
+        <div class="card-columns">
+            <div class="card">
+                <div class="card-header"><h5>1. Git Client</h5></div>
+                <div class="card-body">
+                    <ul>
+                        <li>Go to <a href="https://git-scm.com/" target="_blank">https://git-scm.com/</a> to download the client that works well with Visual Studio Code.</li>
+                        <li>
+                            Download GitHub Desktop from <a href="https://desktop.github.com/" target="_blank">https://desktop.github.com/</a>
+                            to make it easier to create and manage repositories that are cloned locally from Git.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>2. Microsoft SDKs</h5></div>
+                <div class="card-body">
+                    Desired .NET Core and .NET Framework versions can be downloaded from
+                    <a href="https://www.microsoft.com/net/download/visual-studio-sdks" target="_blank">https://www.microsoft.com/net/download/visual-studio-sdks</a>.
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>3. Node.js</h5></div>
+                <div class="card-body">
+                    The installer for node.js can be obtained from <a href="https://nodejs.org" target="_blank">https://nodejs.org</a>.
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>4. Visual Studio Code</h5></div>
+                <div class="card-body">
+                    Installer can be downloaded from <a href="https://code.visualstudio.com/download" target="_blank">https://code.visualstudio.com/download</a>.
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5>5. Configure global git settings for credential helper and email address</h5></div>
+                <div class="card-body">
+                    For Windows installations, it's probably best to use the Windows Credential Store to store your Git login credentials,
+                    so you don't have to enter your username and password every time you synchronize with the remote repository.
+                    <a href="git.html?#CredentialHelper">Click here for information about configuring the credential helper</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header"><h3>Bulk Visual Studio Code Extension Installation</h3></div>
+    <div class="card-body">
+        Following is an example PowerShell script that can be executed within the Visual Studio Code terminal to ensure that a list of extensions that
+        have been installed:
+        <pre class="script-pane  pre-scrollable"><code><var>$RecommendedExtensions</var> <span class="script-operator">=</span> @(
+        <q>'abusaidm.html-snippets'</q><span class="script-operator">,</span>
+        <q>'Angular.ng-template'</q><span class="script-operator">,</span>
+        <q>'christian-kohler.npm-intellisense'</q><span class="script-operator">,</span>
+        <q>'christian-kohler.path-intellisense'</q><span class="script-operator">,</span>
+        <q>'DavidAnson.vscode-markdownlint'</q><span class="script-operator">,</span>
+        <q>'dbaeumer.jshint'</q><span class="script-operator">,</span>
+        <q>'dbaeumer.vscode-eslint'</q><span class="script-operator">,</span>
+        <q>'DotJoshJohnson.xml'</q><span class="script-operator">,</span>
+        <q>'ecmel.vscode-html-css'</q><span class="script-operator">,</span>
+        <q>'EditorConfig.EditorConfig'</q><span class="script-operator">,</span>
+        <q>'eg2.tslint'</q><span class="script-operator">,</span>
+        <q>'eg2.vscode-npm-script'</q><span class="script-operator">,</span>
+        <q>'esbenp.prettier-vscode'</q><span class="script-operator">,</span>
+        <q>'fknop.vscode-npm'</q><span class="script-operator">,</span>
+        <q>'formulahendry.auto-close-tag'</q><span class="script-operator">,</span>
+        <q>'HookyQR.JSDocTagComplete'</q><span class="script-operator">,</span>
+        <q>'johnpapa.Angular2'</q><span class="script-operator">,</span>
+        <q>'johnpapa.angular-essentials'</q><span class="script-operator">,</span>
+        <q>'johnpapa.winteriscoming'</q><span class="script-operator">,</span>
+        <q>'lolkush.quickstart'</q><span class="script-operator">,</span>
+        <q>'mkaufman.HTMLHint'</q><span class="script-operator">,</span>
+        <q>'msjsdiag.debugger-for-chrome'</q><span class="script-operator">,</span>
+        <q>'ms-mssql.mssql'</q><span class="script-operator">,</span>
+        <q>'ms-vscode.csharp'</q><span class="script-operator">,</span>
+        <q>'ms-vscode.PowerShell'</q><span class="script-operator">,</span>
+        <q>'natewallace.angular2-inline'</q><span class="script-operator">,</span>
+        <q>'sidthesloth.html5-boilerplate'</q><span class="script-operator">,</span>
+        <q>'xabikos.JavaScriptSnippets'</q><span class="script-operator">,</span>
+        <q>'Zignd.html-css-class-completion'</q>
+)
+<var>$InstalledExtensions</var> <span class="script-operator">=</span> (<span class="script-command">code</span> <span class="script-commandargument">--list-extensions</span>) <span class="script-operator">-split</span> <q>'\r\n?|\n'</q>;
+<var>$RecommendedExtensions</var> <span class="script-operator">|</span> <span class="script-command">ForEach-Object</span> {
+        <span class="script-keyword">if</span> (<var>$InstalledExtensions</var> <span class="script-operator">-contains</span> <var>$_</var>) {
+        <q>"$_ is already installed."</q> <span class="script-operator">|</span> <span class="script-command">Write-Host</span>;
+    } <span class="script-keyword">else</span> {
+        <span class="script-command">code</span> <span class="script-commandargument">--install-extension</span> <var>$_</var>;
+    }
+}</code></pre>
+    </div>
+</div>

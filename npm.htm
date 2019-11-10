@@ -1,0 +1,198 @@
+<div class="card">
+    <div class="card-header"><h2>Quick Start: New Git Repository with NPM</h2></div>
+    <div class="card-body">
+        <h3>Overview</h3>
+        <ol>
+            <li>Create remote repository and clone locally</li>
+            <li>Initialize NPM for repository (generate a <samp>package.json</samp> file)</li>
+        </ol>
+        <div class="card">
+            <div class="card-header"><h3>1. Initialize Repository</h3></div>
+            <div class="card-body">
+                <div class="card">
+                    <div class="card-header"><h4>a. Determine initial repository settings</h4></div>
+                    <div class="card-body">
+                        <dl>
+                            <dd>Repository Name</dd>
+                            <dt>Name of repository you'll be creating.</dt>
+                            <dt>Description</dt>
+                            <dd>Optional (but recommended) - Short description of the new repository.</dd>
+                            <dt>Add a license</dt>
+                            <dd>
+                                Optional (but recommended) - Typically, you would
+                                <a href="https://choosealicense.com/" target="_blank">choose an open source license</a> to apply the contents of the repository.
+                                <blockquote class="border border-info p-3 text-secondary bg-light ml-3">
+                                    Generally, in Git repositories, a
+                                    <a href="https://help.github.com/articles/licensing-a-repository/#determining-the-location-of-your-license" target="_blank">LICENSE</a>
+                                    file will contain the actual terms of the license for the contents of the repository.
+                                    The <a href="https://docs.npmjs.com/files/package.json" target="_blank">package.json</a> file that will be generated will also
+                                    contain an <a href="https://spdx.org/licenses/" target="_blank">identifier string</a> that indicates the license to be applied to
+                                    the contents.
+                                    <p>
+                                        The default license identifier for <a href="https://docs.npmjs.com/files/package.json" target="_blank">NPM packages</a> is
+                                        <samp>ISC</samp>, which represents the <q>Open Source Initiative</q> license. However (as of the time this document was created)
+                                        GitHub does not have an option for automatically adding a
+                                        <a href="https://help.github.com/articles/licensing-a-repository/#determining-the-location-of-your-license" target="_blank">LICENSE</a>
+                                        file for an <q>Open Source Initiative</q> license.
+                                    </p>
+                                    <p>
+                                        One option would be to select <samp>GNU General Public License v3.0</samp> when you create the remote repository, and then
+                                        entering <kbd>GPL-3.0</kbd> when you initialize the repository for NPM.
+                                    </p>
+                                    <p>
+                                        If you wish to use <samp>ISC</samp> as the license for the
+                                        <a href="https://docs.npmjs.com/files/package.json" target="_blank">package.json</a> file,
+                                        see <a href="https://opensource.org/licenses/ISC" target="_blank">https://opensource.org/licenses/ISC</a>
+                                        for a template wording to use in a corresponding
+                                        <a href="https://help.github.com/articles/licensing-a-repository/#determining-the-location-of-your-license" target="_blank">LICENSE</a>
+                                        file. Verbiage for additional open source license terms can be viewed at
+                                        <a href="https://opensource.org/licenses" target="_blank">https://opensource.org/licenses</a>
+                                    </p>
+                                </blockquote>
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h4>b. Create new remote GitHub repository</h4></div>
+                    <div class="card-body">
+                        Use the pre-determined repository settings from the previous step, along with the other following options:
+                        <dl>
+                            <dt>Initialize this repository with a README</dt>
+                            <dd>Optional (but recommended) - Adds README.md to the repository.</dd>
+                            <dt>Add .gitignore</dt>
+                            <dd>Select <kbd>Node</kbd>.</dd>
+                        </dl>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h4>c. Make local clone of remote repository</h4></div>
+                    <div class="card-body">
+                        From the terminal window or a git bash/cmd prompt, change to the subdirectory which is going to be the parent folder of the local repository,
+                        and clone the remote repository.
+                        <pre class="console-pane pre-scrollable"><code>cd <kbd>parentDirectory</kbd>
+git clone --recurse-submodules <kbd>repository_url</kbd></code></pre>
+                        A subdirectory will be created which is the same name as the remote repository.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><h3>2. Initialize NPM</h3></div>
+            <div class="card-body">
+                Open the terminal windows and change to the subdirectory of the local repository, then execute the NPM initialization command.
+                <pre class="console-pane pre-scrollable"><code>cd <kbd>path_to_repository</kbd>
+npm init</code></pre>
+                Answer the prompts as follows:
+                <dl>
+                    <dt>package name</dt>
+                    <dd>Typically, you can just hit enter and accept the defaults, which will probably the same as the repository name in all lower-case letters.</dd>
+                    <dt>version</dt>
+                    <dd>You can accept the default or enter a different version number, depending upon your preference.</dd>
+                    <dt>description</dt>
+                    <dd>You can use the same description you used when you created the remote repository.</dd>
+                    <dt>entry point</dt>
+                    <dd>It is usually okay to accept the default value, and won't break anything. This may change, depending upon what is going to be in the NPM package.</dd>
+                    <dt>test command</dt>
+                    <dd>This can be left blank, unless you already know what to enter here.</dd>
+                    <dt>git repository</dt>
+                    <dd>NPM should be able to guess the default value correctly (from the git settings). Otherwise, enter the URL you used when you cloned the remote repository.</dd>
+                    <dt>keywords</dt>
+                    <dd>If is okay to leave this initially blank.</dd>
+                    <dt>author</dt>
+                    <dd>Name of the author (presumably, yourself).</dd>
+                    <dt>license</dt>
+                    <dd>
+                        This is an <a href="https://spdx.org/licenses/" target="_blank">abbreviated string which represents the license</a> associated with the NPM package. If you added a <a href="https://help.github.com/articles/licensing-a-repository/#determining-the-location-of-your-license" target="_blank">LICENSE</a>
+                        file when you created the remote repository, then this should correspond with that license.
+                    </dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+<!--
+                npm WARN gulp-angular@0.1.2 requires a peer of gulp@~3.6.2 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-util@~2.2.14 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-clean@~0.2.4 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-inject@~0.4.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-tap@~0.1.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of deep-extend@~0.2.8 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of minimist@0.0.8 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of event-stream@~3.1.2 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-concat@~2.2.0 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-ngmin@~0.2.0 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-uglify@~0.2.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-insert@~0.3.0 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-rename@~1.2.0 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-ng-html2js@~0.1.6 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-minify-html@~0.1.3 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-minify-css@~0.3.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-size@~0.3.0 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-svgmin@~0.4.5 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of express@~4.1.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-filter@~0.4.1 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of karma@~0.12.16 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-karma@0.0.4 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of glob@~3.2.9 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of karma-jasmine@~0.1.5 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of karma-phantomjs-launcher@~0.1.4 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of gulp-autoprefixer@~0.0.7 but none is installed. You must install peer dependencies yourself.
+npm WARN gulp-angular@0.1.2 requires a peer of karma-xml-reporter@~0.1.4 but none is installed. You must install peer dependencies yourself.
+            -->
+<div class="card">
+    <div class="card-header"><h2>Managing packages</h2></div>
+    <div class="card-body">
+        Show packages installed (without listing dependencies):
+        <pre class="console-pane pre-scrollable"><code>npm list --depth 0</code></pre>
+        Update local packages:
+        <pre class="console-pane pre-scrollable"><code>npm update</code></pre>
+        Update global packages:
+        <pre class="console-pane pre-scrollable"><code>npm update -g</code></pre>
+        Install / Refresh packages in package.json file:
+        <pre class="console-pane pre-scrollable"><code>npm install</code></pre>
+        Upgrade to latest version of NPM itself:
+        <pre class="console-pane pre-scrollable"><code>npm install npm@latest -g</code></pre>
+        Remove local package:
+        <pre class="console-pane pre-scrollable"><code>npm uninstall <kbd>package_name</kbd></code></pre>
+        Remove global package:
+        <pre class="console-pane pre-scrollable"><code>npm uninstall <kbd>package_name</kbd> -g</code></pre>
+    </div>
+</div>
+<div class="card">
+    <div class="card-header"><h3>Common Global NPM Modules</h3></div>
+    <div class="card-body">
+        I have found that for some modules, it is best to install them globally if you intend to use them. When you actually use them in your project, it's good to install them locally as well. Following are some of the modules I found I needed to install globally:
+        <ul>
+            <li><strong>gulp:</strong> This can be useful for defining more complicated tasks.</li>
+            <li><strong>uglify-js:</strong> This is used for compiling many JavaScript files into a single distributable.</li>
+            <li><strong>mocha:</strong> This is a unit testing framework.</li>
+            <li><strong>eslint:</strong> Error checking for JavaScript</li>
+            <li><strong>@types:</strong> This contains many modules which provide typescript definitions</li>
+            <ul>
+                <li>@types/core-js</li>
+                <li>@types/node</li>
+                <li>@types/jquery</li>
+                <li>@types/mocha</li>
+                <li>@types/angular</li>
+                <li>@types/uglify-js</li>
+                <li>@types/bootstrap</li>
+            </ul>
+            <li><strong>generator-code:</strong> Creates a boilerplace file and folder structure to create your own Visual Code extension or customization package.</li>
+            <li><strong>jshint:</strong> Adds JavaScript intellisense.</li>
+            <li><strong>tslint:</strong> Error checking for TypeScript</li>
+            <li><strong>typescript:</strong> Adds TypeScript intellisense.</li>
+            <li><strong>vsce:</strong> Assists with publishing your own Visual Studio code extensions.</li>
+            <li><strong>yo:</strong> Scaffolding system which services as the base framework for many other modules  which create boilerplate code for many project types.  These other modules should also be installed globally, as well. Following are some generator modules which use yo:</li>
+            <ul>
+                <li><strong>angular:</strong> AngularJS project</li>
+                <li><strong>gulp-angular:</strong> AngularJS project with Gulp</li>
+                <li><strong>webapp:</strong> Front-end web app</li>
+                <li><strong>javascript:</strong> JavaScript library</li>
+                <li><strong>node:</strong> node.js module</li>
+                <li><strong>bootstrap:</strong> Add bootstrap to a project</li>
+                <li><strong>node-typescript:</strong> Node.Js module  using TypeScript</li>
+            </ul>
+        </ul>
+    </div>
+</div>
